@@ -886,7 +886,7 @@ const CFG={
   SUPABASE_URL:"https://xwceujuzttzaxjdspurc.supabase.co", SUPABASE_KEY:"sb_publishable_Nl7534YvmKL3Rr0thZAPxg_eQomrVG9", TABLE:"hub",
   // --- CTFtime API không cho gọi trực tiếp từ trình duyệt (CORS) nên đi qua proxy.
   //     Để trống = tự thử các proxy công cộng ở PROXIES bên dưới. Có thể tự dựng Cloudflare Worker riêng (xem cuối file).
-  CTFTIME_PROXY:"",
+  CTFTIME_PROXY:"https://gg-ctftime-proxy.doannhattan-8a4-thcsccl.workers.dev/",
   PROXIES:["https://api.codetabs.com/v1/proxy?quest=","https://api.allorigins.win/raw?url="],
   CT_REFRESH:30,                                  // phút giữa 2 lần làm mới danh sách giải
   ALERT_MIN:60,                                   // còn bao nhiêu phút thì vào chế độ báo động
@@ -1237,6 +1237,7 @@ async function loadCT(force){
     if(fresh){const nw=list.filter(x=>!old.has(x.id));if(nw.length){SND.notify();nw.slice(0,5).forEach(x=>INTEL.push(`<b>[CTFTIME]</b> giải mới lên sóng: <em>${esc(x.name)}</em>`));toast(`CTFtime: ${nw.length} giải mới`)}}
     resolveOrgs();loadTeamInfo();
   }catch(e){
+    console.warn("CTFtime loadCT lỗi:",e);
     if(c&&c.list)applyCT(c.list,"cache",c.t);else{CTS={src:"static",t:0};renderEvStatus()}
   }
 }
