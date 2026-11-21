@@ -871,7 +871,7 @@ html{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 // =====================================================================
 const CFG={
   TEAM_ID:456477,
-  LOCK_PASS:"31082007", LOCK_HINT:"Ngày debut của Hatsune Miku (Cú pháp ddmmyyyy)?",          // passphrase màn hình khóa
+  LOCK_PASS:"green", LOCK_HINT:"Still -----, soon rotting.",          // passphrase màn hình khóa
   INVITE:"GGCoXanh",                              // mã mời mặc định (leader đổi được ở tab Đội → quản trị)
   LEADER:["--5h4rk--"],                           // leader của team (đổi ở đây sẽ áp dụng lại cho dữ liệu đã có)
   // --- Realtime: điền Supabase để mọi người thấy thay đổi ngay lập tức (xem hướng dẫn SQL ở cuối file).
@@ -2103,8 +2103,8 @@ const Lock=(()=>{
     try{
     switch(step){
       case"pass":
-        if(val===CFG.LOCK_PASS){line("✔ passphrase hợp lệ — đang mở khóa…","ok");SND.ok();await wait(350);await afterPass()}
-        else{tries++;deny(`✖ ACCESS DENIED · sai passphrase (lần ${tries})`);if(tries>=3)line("hint: "+esc(CFG.LOCK_HINT)+"  ← thật đấy, chỉ là phép cộng thôi","hn");ask("passphrase:","pass")}
+        if(val.toLowerCase()===CFG.LOCK_PASS.toLowerCase()){line("✔ passphrase hợp lệ — đang mở khóa…","ok");SND.ok();await wait(350);await afterPass()}
+        else{tries++;deny(`✖ ACCESS DENIED · sai passphrase (lần ${tries})`);if(tries>=3)line("hint: "+esc(CFG.LOCK_HINT)+"  ← (Hint: Một từ trong tên của team)","hn");ask("passphrase:","pass")}
         break;
       case"sess":if(/^(n|no|không)$/i.test(val))menu();else await finish(tmp.sess);break;
       case"menu":
