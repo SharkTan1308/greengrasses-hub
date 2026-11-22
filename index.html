@@ -1353,14 +1353,26 @@ const member=()=>!!ME&&!GUEST;
 const canEditUser=n=>member()&&(n===ME||isLeader());
 const rolesHTML=r=>(r&&r.length?r:[]).slice().sort((a,b)=>ROLES.indexOf(a)-ROLES.indexOf(b)).map(x=>`<span class="role ${x}" style="--rc:${RC[x]||"#94A3B8"}">${x==="leader"?"★ ":""}${esc(x)}</span>`).join(" ")||'<span class="dim" style="font-size:11px">chưa chọn vai trò</span>';
 const NET_IP={v4:"",v6:""};
-async function fetchNetInfo(ms=1800){
-  const grab=async u=>{
+async function fetchNetInfo(ms=2500){
+  const grabText=async(u,re)=>{
     const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),ms);
-    try{const r=await fetch(u,{signal:ac.signal,cache:"no-store"});if(!r.ok)return"";const j=await r.json();return j&&j.ip?String(j.ip):""}
-    catch(_){return""}finally{clearTimeout(tm)}
+    try{
+      const r=await fetch(u,{signal:ac.signal,cache:"no-store"});
+      if(!r.ok)throw 0;
+      const t=(await r.text()).trim();
+      if(re.test(t))return t;
+      throw 0;
+    }finally{clearTimeout(tm)}
   };
-  const [a,b]=await Promise.all([NET_IP.v4?Promise.resolve(NET_IP.v4):grab("https://api4.ipify.org?format=json"),NET_IP.v6?Promise.resolve(NET_IP.v6):grab("https://api6.ipify.org?format=json")]);
-  if(a)NET_IP.v4=a;if(b&&b!==a)NET_IP.v6=b;
+  const re4=/^\d{1,3}(\.\d{1,3}){3}$/,re6=/^[0-9a-f:]+$/i;
+  const v4Urls=["https://api-ipv4.ip.sb/ip","https://ipv4.icanhazip.com/","https://v4.ident.me/","https://api4.ipify.org/"];
+  const v6Urls=["https://api-ipv6.ip.sb/ip","https://ipv6.icanhazip.com/","https://v6.ident.me/","https://api6.ipify.org/"];
+  const [a,b]=await Promise.all([
+    NET_IP.v4?Promise.resolve(NET_IP.v4):raceOk(v4Urls.map(u=>grabText(u,re4))).catch(()=>""),
+    NET_IP.v6?Promise.resolve(NET_IP.v6):raceOk(v6Urls.map(u=>grabText(u,re6).then(ip=>ip.includes(":")?ip:Promise.reject()))).catch(()=>"")
+  ]);
+  if(a)NET_IP.v4=a;
+  if(b&&b!==a)NET_IP.v6=b;
   return NET_IP;
 }
 function validateUsernameClean(name){
