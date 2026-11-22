@@ -729,6 +729,83 @@ html{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 .cp-it{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;background:#0b111b;border:1px solid rgba(56,189,248,.16);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12.5px}
 .cp-it.on,.cp-it:hover{border-color:var(--g);background:rgba(var(--g-rgb),.12)}
 .cp-it b{color:var(--g);font-weight:700}.cp-it small{color:var(--mute);white-space:nowrap}
+
+/* ===== Lớp ảnh nền & phủ tối độc lập (chỉ hiện sau sign-in) ===== */
+#bgImg,#bgDim{position:fixed;inset:0;pointer-events:none;display:none}
+#bgImg{z-index:0;background-size:cover;background-position:center;background-repeat:no-repeat}
+#bgDim{z-index:0;background:rgba(0,0,0,.55)}
+body.authed.has-bg #bgImg,body.authed.has-dim #bgDim{display:block}
+body.authed{background:var(--bg)}
+body.authed .brand{background:var(--surface,#02040a)}
+body.authed .term{background:var(--surface,#04070c)}
+body.authed .tbar{background:var(--panel,#0b111b)}
+body.authed .trow{background:var(--surface,#02040a)}
+body.authed .tile,body.authed .lnr,body.authed .rc,body.authed .card,body.authed .cp-it{background:var(--panel-el,#0b111b)}
+body.authed .tick{background:var(--surface,#030710);border-top-color:rgba(var(--g-rgb),.3)}
+body.authed .tk-t{color:var(--c);opacity:.9}
+body.authed .ct.hit{fill:var(--g2);opacity:.65}
+body.authed h1{color:var(--brand-g,#39FF14);text-shadow:0 0 14px var(--brand-glow,rgba(57,255,20,.55)),2px 0 var(--brand-c,var(--c)),-2px 0 var(--brand-m,var(--mag))}
+body.authed .gt::before{color:var(--brand-c,var(--c))}
+body.authed .gt::after{color:var(--brand-m,var(--mag))}
+body.authed .hero h2{color:var(--brand-m,var(--mag))}
+body.authed.has-bg .pn{background:var(--panel-glass,rgba(11,18,32,.78));backdrop-filter:blur(8px)}
+body.authed.has-bg .brand,body.authed.has-bg .term{background:var(--surface-glass,rgba(4,7,14,.8));backdrop-filter:blur(8px)}
+body.authed.has-bg .tile,body.authed.has-bg .lnr,body.authed.has-bg .rc,body.authed.has-bg .card{background:var(--panel-el-glass,rgba(11,18,32,.72))}
+
+/* ===== Giản lược Effects (mặc định tắt, bật từ Settings) ===== */
+body.lite-fx #rain,body.lite-fx #crt .grain,body.lite-fx #crt .scl,body.lite-fx #crt .flk,body.lite-fx .hexl,body.lite-fx .hexv,body.lite-fx #bsc{display:none !important}
+body.lite-fx .pn{animation:none}
+
+/* ===== Guest mode: ẩn ~/notes & kéo dài ls events/ --upcoming ===== */
+body.is-guest .g-term{display:none !important}
+@media (min-width:1101px){
+  body.is-guest #pg-ops{grid-template-areas:"brand brand clock hero" "sys sys events hero" "log log events lineup" "log log events map"}
+}
+
+/* ===== Mở rộng ~/notes (1/3 phải trên PC / Toàn màn hình trên Mobile) ===== */
+@media (min-width:1101px){
+  body.notes-wide #pg-ops{
+    grid-template-columns:minmax(0,22fr) minmax(0,22fr) minmax(0,23fr) minmax(0,33fr);
+    grid-template-rows:minmax(0,122fr) minmax(0,142fr) minmax(0,350fr) minmax(0,256fr);
+    grid-template-areas:"brand clock hero term" "sys sys hero term" "log events lineup term" "log events map term";
+  }
+  body.notes-wide .brand h1{font-size:clamp(18px,1.9vw,32px)}
+  body.notes-wide .brand .meta{font-size:11.5px}
+  body.notes-wide .clock .clk-t{font-size:clamp(20px,2.2vw,38px)}
+  body.notes-wide .clock .clk-d{font-size:11px}
+  body.notes-wide .pn.hero{gap:10px;padding:8px 10px}
+  body.notes-wide .hero .emb{width:clamp(54px,5.2vw,96px)}
+  body.notes-wide .hero .cd{font-size:clamp(16px,1.5vw,24px)}
+  body.notes-wide .sys{gap:5px;padding:5px 7px}
+  body.notes-wide .tile{padding:4px 6px}
+  body.notes-wide .tile .v{font-size:clamp(12px,1.05vw,16px)}
+  body.notes-wide .nodes div{grid-template-columns:48px minmax(0,1fr) 44px;font-size:9.5px}
+}
+@media (max-width:1100px){
+  body.notes-wide{overflow:hidden}
+  body.notes-wide .g-term{position:fixed;inset:0;z-index:125;height:100vh;height:100dvh;border-radius:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  body.notes-wide .g-term .tbar button#tExp{min-width:34px;min-height:30px;font-size:14px}
+}
+
+/* ===== Account ID nhỏ dưới tên + File & Link trong ~/notes + Settings UI ===== */
+.uid-sub{font-size:11px;color:var(--mute);letter-spacing:.08em;margin-top:-4px;opacity:.88;cursor:pointer}
+.uid-sub:hover{color:var(--c)}
+.tprev{flex:none;display:flex;align-items:center;gap:8px;padding:6px 12px;border-top:1px solid var(--line);background:#060a12;font-size:12px}
+.tprev[hidden]{display:none}
+.tprev img{width:34px;height:34px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
+.tprev .tp-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--c)}
+.nlink{color:var(--c);font-weight:700;text-decoration:underline;word-break:break-all}
+.nlink:hover{color:var(--g)}
+.nfile{display:inline-flex;align-items:center;gap:6px;margin-top:3px;padding:3px 7px;border:1px solid var(--line);border-radius:5px;background:rgba(var(--g-rgb),.06);font-size:11.5px}
+.nimg{display:block;max-width:min(240px,100%);max-height:150px;margin-top:4px;border-radius:6px;border:1px solid var(--line);cursor:pointer}
+.st-sec{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#0b111b;display:grid;gap:8px}
+.st-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px}
+.st-row input[type=color]{width:42px;height:28px;padding:0;border:1px solid var(--line);border-radius:5px;background:transparent;cursor:pointer}
+.st-row input[type=color]:disabled{opacity:.4;cursor:not-allowed}
+.st-row input[type=range]{flex:1;accent-color:var(--g)}
+.st-rad{display:flex;gap:12px;flex-wrap:wrap}
+.st-rad label{display:flex;align-items:center;gap:6px;color:var(--text);font-size:12.5px;cursor:pointer}
+.st-rad input{accent-color:var(--g)}
 </style>
 </head>
 <body class="pre">
@@ -745,6 +822,7 @@ html{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 </div>
 
 <div id='intro'><pre id='skull'></pre><div id='code'><div id='stack'></div></div><div id='fx'></div><div id='logo'><div class='lbox'><span class='lg lc' id='lgc'></span><span class='lg lm' id='lgm'></span><span class='lg lw' id='lgw'></span><i class='scan'></i><b class='cr c1'></b><b class='cr c2'></b><b class='cr c3'></b><b class='cr c4'></b><div id='lgs'></div></div></div><div class='box' id='box'><b class='cr c1'></b><b class='cr c2'></b><b class='cr c3'></b><b class='cr c4'></b><i class='sw'></i><span class='bt'>secure_channel // aes-256</span><span class='bl2'>● live</span><div id='bAuth'><span id='bMsg'></span><span id='bPct'>0%</span></div><div id='bBar'><i></i></div><div id='boxTxt'></div><div id='bSub'>uplink stable · session 0x7F3A91C2 · latency 42ms<span class='cur'></span></div></div><div id="skip">ESC · bỏ qua intro</div></div>
+<div id="bgImg" aria-hidden="true"></div><div id="bgDim" aria-hidden="true"></div>
 <canvas id="rain" aria-hidden="true"></canvas>
 <div id="app">
   <div class="cls"><b>TOP SECRET</b><span>// CTF OPS // EYES ONLY // GREEN GRASSES</span><span id="clsR">CLEARANCE: —</span></div>
@@ -761,7 +839,7 @@ html{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
     <div class="who">
       <button class="ib" id="cmdBtn" type="button" title="Command Palette (Ctrl+K)">⌘K</button>
       <button class="ib me" id="meBtn" type="button"><i></i><span id="meName">—</span></button>
-      <button class="ib" data-snd type="button">♪ âm thanh</button>
+      <button class="ib" id="setBtn" type="button" title="Cài đặt giao diện & âm thanh">⚙ cài đặt</button>
       <button class="ib" id="outBtn" type="button" title="Đăng xuất">⏻</button>
     </div>
   </header>
@@ -819,9 +897,16 @@ html{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
     </section>
 
     <section class="pn term g-term" id="term" aria-label="Terminal ghi thông báo">
-      <div class="tbar"><i class="d"></i><i class="d y"></i><i class="d g"></i><span id="tbarN">root@gg: ~/notes</span><em>bảng thông báo chung</em></div>
+      <div class="tbar"><i class="d"></i><i class="d y"></i><i class="d g"></i><span id="tbarN">root@gg: ~/notes</span><em>Chat</em><button class="mini" id="tExp" type="button" title="Mở rộng khung notes">⤢</button></div>
       <div class="tb" id="tb"></div>
-      <label class="trow"><span id="tp">root@gg:~/notes$</span><input id="ti" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="300" aria-label="Nhập lệnh hoặc nội dung thông báo"></label>
+      <div class="tprev" id="tPrev" hidden></div>
+      <div class="trow">
+        <button class="mini" id="tPlus" type="button" title="Đính kèm ảnh hoặc file">+</button>
+        <input type="file" id="tFile" hidden>
+        <span id="tp">root@gg:~/notes$</span>
+        <input id="ti" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="300" aria-label="Nhập lệnh hoặc nội dung thông báo">
+        <button class="mini g" id="tSend" type="button" title="Gửi">➤</button>
+      </div>
     </section>
   </main>
 
@@ -1076,6 +1161,15 @@ const SND=(()=>{
   ui();
   return{
     tap,
+    isMuted:()=>muted,
+    hasAudio:()=>!!ctx,
+    toggle(){
+      if(!ctx)return false;
+      if(ctx.state!=='running'&&!muted){muted=false;LS.set('gg_mute',false);M.gain.setTargetAtTime(.6,ctx.currentTime,.05);resume().then(()=>{ui();tap()});return true}
+      muted=!muted;LS.set('gg_mute',muted);M.gain.setTargetAtTime(muted?0:.6,ctx.currentTime,.05);
+      if(!muted)resume().then(()=>tap());
+      ui();return !muted;
+    },
     unlock(){if(!ctx)return Promise.resolve();try{const b=ctx.createBufferSource();b.buffer=ctx.createBuffer(1,1,22050);b.connect(ctx.destination);b.start(0)}catch(e){}return resume()},
     live:()=>!!ctx&&ctx.state==='running',
     prog(p){P=p;if(ok()){droneStart();droneTo(p)}},
@@ -1171,8 +1265,29 @@ const Store=(()=>{
     else{const t=Date.now();peers.forEach(v=>{if(t-v.at<20000)arr.push(v)})}
     return arr;
   }
+  async function verifyRecovery(token){
+    if(mode!=="supabase"||!sb)return false;
+    try{const {data,error}=await sb.rpc("verify_root_recovery",{token});return !error&&data===true}
+    catch(e){return false}
+  }
+  async function uploadFile(file){
+    if(mode==="supabase"&&sb){
+      const safeName=String(file.name||"file").replace(/[^\w.\-]+/g,"_").slice(-60);
+      const path=`notes/${Date.now()}_${rid()}_${safeName}`;
+      const {error}=await sb.storage.from("hub-files").upload(path,file,{contentType:file.type||"application/octet-stream"});
+      if(error)throw error;
+      const {data}=sb.storage.from("hub-files").getPublicUrl(path);
+      return{name:file.name,size:file.size,mime:file.type||"",url:data.publicUrl,path};
+    }
+    if(file.size>1500000)throw new Error("Chế độ local chỉ hỗ trợ file ≤ 1.5MB");
+    const url=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file)});
+    return{name:file.name,size:file.size,mime:file.type||"",url,path:null};
+  }
+  function removeFile(path){
+    if(mode==="supabase"&&sb&&path)sb.storage.from("hub-files").remove([path]).catch(()=>{});
+  }
   return{
-    init,put,del,all,get:id=>docs.get(id),on:f=>subs.add(f),mode:()=>mode,
+    init,put,del,all,get:id=>docs.get(id),on:f=>subs.add(f),mode:()=>mode,verifyRecovery,uploadFile,removeFile,
     track(n,chId){me=n;if(chId!==undefined)focus=chId||null;if(mode==="supabase"&&ch)ch.track({n:me,ch:focus}).catch(()=>{});else{hb();emit({id:"~presence",kind:"presence"},"self")}},
     online(){return new Set(states().map(x=>x.n).filter(Boolean))},
     focusOn(id){return[...new Set(states().filter(x=>x.ch===id&&x.n).map(x=>x.n))]}
@@ -1188,9 +1303,18 @@ const U=n=>{const d=Store.get(uid(n));return d&&d.data};
 const users=()=>Store.all("user").map(d=>d.data).sort((a,b)=>(a.order??99)-(b.order??99)||a.name.localeCompare(b.name));
 const putUser=u=>Store.put({id:uid(u.name),kind:"user",data:u});
 const isLeader=n=>!!(U(n||ME)&&(U(n||ME).roles||[]).includes("leader"));
+const isRootUser=u=>!!(u&&(u.root===true||u.accId==="#5H4RK"||CFG.LEADER.includes(u.name)));
 const member=()=>!!ME&&!GUEST;
 const canEditUser=n=>member()&&(n===ME||isLeader());
 const rolesHTML=r=>(r&&r.length?r:[]).slice().sort((a,b)=>ROLES.indexOf(a)-ROLES.indexOf(b)).map(x=>`<span class="role ${x}" style="--rc:${RC[x]||"#94A3B8"}">${x==="leader"?"★ ":""}${esc(x)}</span>`).join(" ")||'<span class="dim" style="font-size:11px">chưa chọn vai trò</span>';
+function genAccId(excludeSet){
+  const H="0123456789ABCDEF",used=excludeSet||new Set(users().map(u=>u.accId).filter(Boolean));
+  for(let k=0;k<5000;k++){
+    let s="#";for(let i=0;i<6;i++)s+=H[Math.random()*16|0];
+    if(s!=="#5H4RK"&&!used.has(s)){used.add(s);return s}
+  }
+  return "#"+Date.now().toString(16).slice(-6).toUpperCase();
+}
 function markUserSkip(name,add=true){
   const cur=Store.get("cfg:skip");
   const set=new Set((cur&&cur.data&&Array.isArray(cur.data.list)?cur.data.list:[]).map(s=>s.toLowerCase()));
@@ -1200,13 +1324,31 @@ function markUserSkip(name,add=true){
 }
 function seed(){
   const skip=new Set(((Store.get("cfg:skip")||{}).data?.list||[]).map(s=>s.toLowerCase()));
-  M.forEach(([n,ctf],i)=>{if(!U(n)&&!skip.has(n.toLowerCase()))putUser({name:n,ctf,roles:CFG.LEADER.includes(n)?["leader"]:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:i})});
+  M.forEach(([n,ctf],i)=>{
+    if(!U(n)&&!skip.has(n.toLowerCase())){
+      const rt=CFG.LEADER.includes(n);
+      putUser({name:n,ctf,accId:rt?"#5H4RK":null,root:rt,roles:rt?["leader"]:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:i});
+    }
+  });
   const want=CFG.LEADER.join("|"),ld=Store.get("cfg:lead");
   if(!ld||ld.data.v!==want){
-    users().forEach(u=>{const has=(u.roles||[]).includes("leader"),should=CFG.LEADER.includes(u.name);
+    users().forEach(u=>{const has=(u.roles||[]).includes("leader"),should=CFG.LEADER.includes(u.name)||u.root===true;
       if(has!==should){u.roles=should?["leader",...(u.roles||[])]:(u.roles||[]).filter(r=>r!=="leader");putUser(u)}});
     Store.put({id:"cfg:lead",kind:"cfg",data:{v:want}});
   }
+  // Đảm bảo root có #5H4RK & toàn bộ user có accId duy nhất
+  let us=users();
+  if(!us.some(isRootUser)){
+    const fb=us.find(u=>u.order===0&&(u.roles||[]).includes("leader"));
+    if(fb){fb.root=true;fb.accId="#5H4RK";putUser(fb);us=users()}
+  }
+  const used=new Set();
+  us.forEach(u=>{if(isRootUser(u)){used.add("#5H4RK");if(u.accId!=="#5H4RK"||!u.root||!(u.roles||[]).includes("leader")){u.root=true;u.accId="#5H4RK";if(!(u.roles||[]).includes("leader"))u.roles=["leader",...(u.roles||[])];putUser(u)}}});
+  us.forEach(u=>{
+    if(isRootUser(u))return;
+    if(!u.accId||!/^#[0-9A-F]{6}$/.test(u.accId)||used.has(u.accId)){u.accId=genAccId(used);putUser(u)}
+    else used.add(u.accId);
+  });
   if(!Store.all("note").length){
     const old=LS.get("gg_term_v1",null);
     if(old&&Array.isArray(old.n)&&old.n.length&&!LS.get("gg_term_mig",0)){old.n.forEach((o,i)=>Store.put({id:"n:"+rid()+i,kind:"note",data:{t:o.t,by:"local",c:o.ts||Date.now()}}));LS.set("gg_term_mig",1)}
@@ -1377,6 +1519,8 @@ function renderNow(){
 }
 function renderBar(){
   const on=Store.online();
+  document.body.classList.toggle("is-guest",!member());
+  if(!member()&&document.body.classList.contains("notes-wide"))document.body.classList.remove("notes-wide");
   $("meName").textContent=GUEST?"khách (chỉ xem)":ME||"—";
   $("meBtn").querySelector("i").style.display=GUEST?"none":"";
   $("outBtn").title=GUEST?"Đăng nhập":"Đăng xuất";$("outBtn").textContent=GUEST?"⏎ đăng nhập":"⏻";
@@ -1515,56 +1659,144 @@ function renderMap(){
 }
 
 // --- terminal: bảng thông báo chung của team ---
-let fb="",editing=null;
-const notes=()=>Store.all("note").sort((a,b)=>a.data.c-b.data.c);
+let fb="",editing=null,pendingFile=null,pendingUrl=null,sendingNote=false;
+const notes=()=>member()?Store.all("note").sort((a,b)=>a.data.c-b.data.c):[];
 const canNote=d=>member()&&(d.data.by===ME||isLeader());
+const fmtBytes=b=>b<1024?b+"B":b<1048576?(b/1024).toFixed(1)+"KB":(b/1048576).toFixed(1)+"MB";
+function fileExt(name){
+  const base=String(name||"").split(/[\\/]/).pop();
+  const idx=base.lastIndexOf(".");
+  if(idx<=0||idx===base.length-1)return"";
+  return base.slice(idx+1).toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,12);
+}
+function renderNoteText(txt){
+  const s=String(txt||""),re=/(^|\s)(https?:\/\/[^\s<>"'`]+)/gi;
+  let out="",last=0,m;
+  while((m=re.exec(s))!==null){
+    out+=esc(s.slice(last,m.index+m[1].length));
+    const u=m[2];
+    out+=`<a class="nlink" href="${esc(safeUrl(u))}" target="_blank" rel="noopener noreferrer">${esc(u)}</a>`;
+    last=m.index+m[0].length;
+  }
+  return out+esc(s.slice(last));
+}
+function maskNoteLog(txt,file){
+  const clean=String(txt||"").trim();
+  const hasLink=/(^|\s)https?:\/\/[^\s<>"'`]+/i.test(clean);
+  const textNoLinks=clean.replace(/(^|\s)https?:\/\/[^\s<>"'`]+/gi," ").trim();
+  const words=textNoLinks?textNoLinks.split(/\s+/):[];
+  const parts=[];
+  if(words.length)parts.push(esc(words.slice(0,2).join(" "))+(words.length>2?"...":""));
+  if(hasLink)parts.push("(đã gửi link)");
+  if(file){const ext=fileExt(file.name);parts.push(ext?`(đã gửi file ${esc(ext)})`:"(đã gửi file)")}
+  return parts.join(" ")||"(tin nhắn)";
+}
+function clearPendingFile(){
+  if(pendingUrl){URL.revokeObjectURL(pendingUrl);pendingUrl=null}
+  pendingFile=null;if($("tFile"))$("tFile").value="";
+  renderPrev();
+}
+function renderPrev(){
+  const box=$("tPrev");if(!box)return;
+  if(!pendingFile){box.hidden=true;box.innerHTML="";return}
+  box.hidden=false;
+  const isImg=pendingFile.type&&pendingFile.type.startsWith("image/");
+  box.innerHTML=`${isImg&&pendingUrl?`<img src="${pendingUrl}" alt="preview">`:'<span>📎</span>'}<span class="tp-n">${esc(pendingFile.name)} <small class="dim">(${fmtBytes(pendingFile.size)})</small></span><button class="mini r" id="tPrevX" type="button" title="Hủy đính kèm">✕</button>`;
+  $("tPrevX").onclick=clearPendingFile;
+}
 function say(m){fb=esc(m);renderTerm()}
 function renderTerm(){
-  const b=$("tb"),end=b.scrollHeight-b.scrollTop-b.clientHeight<40,keep=b.scrollTop,ns=notes();
-  $("tp").textContent=editing?"edit["+editing+"]>":(member()?ME:"guest")+"@gg:~/notes$";$("tbarN").textContent=(member()?ME:"guest")+"@gg: ~/notes";
+  const b=$("tb");
+  if(!member()){b.innerHTML="";return}
+  const end=b.scrollHeight-b.scrollTop-b.clientHeight<40,keep=b.scrollTop,ns=notes();
+  $("tp").textContent=editing?"edit["+editing+"]>":ME+"@gg:~/notes$";$("tbarN").textContent=ME+"@gg: ~/notes";
   let h=`<div class="tl sys">Green Grasses notes · ${Store.mode()==="supabase"?"đồng bộ realtime cả team":"lưu trên trình duyệt này (local)"} · gõ <b>help</b></div>`;
-  h+=ns.length?ns.map((o,i)=>`<div class="tl"><span class="id">[${i+1}]</span><span class="ts">${fmtT.format(o.data.c)}</span><span class="tx"><span style="color:var(--c)">${esc(o.data.by)}</span>: ${esc(o.data.t)}</span><span class="ac">${canNote(o)?`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button><button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span></div>`).join(""):'<div class="tl sys">(chưa có thông báo nào)</div>';
+  h+=ns.length?ns.map((o,i)=>{
+    const f=o.data.file;
+    let fhtml="";
+    if(f&&f.url){
+      const safeF=esc(safeUrl(f.url));
+      if((f.mime||"").startsWith("image/"))fhtml=`<div><img class="nimg" src="${safeF}" alt="${esc(f.name)}" data-img="${safeF}"></div><div class="nfile">🖼 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
+      else fhtml=`<div class="nfile">📎 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
+    }
+    return `<div class="tl"><span class="id">[${i+1}]</span><span class="ts">${fmtT.format(o.data.c)}</span><span class="tx"><span style="color:var(--c)">${esc(o.data.by)}</span>: ${renderNoteText(o.data.t)}${fhtml}</span><span class="ac">${canNote(o)?`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button><button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span></div>`;
+  }).join(""):'<div class="tl sys">(chưa có thông báo nào)</div>';
   if(fb)h+=`<div class="tl fb">${fb}</div>`;
   b.innerHTML=h;b.scrollTop=end?b.scrollHeight:keep;
 }
 const fmtT=fmtS;
 const noteAt=i=>notes()[i-1];
-function addNote(t){if(!member()){SND.deny();return say("khách không thể ghi thông báo — đăng nhập trước")}const n=notes().length+1;Store.put({id:"n:"+rid(),kind:"note",data:{t:t.slice(0,280),by:ME,c:Date.now()}});act("note",`<b>${esc(ME)}</b> ghi thông báo #${n}: ${esc(t.slice(0,60))}${t.length>60?"…":""}`);SND.notify();say("đã lưu thông báo #"+n)}
-function delNote(i){const o=noteAt(i);if(!o){SND.deny();return say("không có thông báo #"+i)}if(!canNote(o)){SND.deny();return say("không có quyền xóa #"+i)}Store.del(o.id);if(editing===i)stopEdit();SND.tap();say("đã xóa #"+i)}
+async function addNote(t,file){
+  if(!member()){SND.deny();return say("khách không thể ghi thông báo — đăng nhập trước")}
+  if(sendingNote)return;
+  t=String(t||"").trim();if(!t&&!file)return;
+  let fileMeta=null;
+  if(file){
+    sendingNote=true;say("đang tải file lên…");
+    try{fileMeta=await Store.uploadFile(file)}
+    catch(e){sendingNote=false;SND.deny();toast("⚠ Lỗi tải file: "+(e.message||e),1);return say("lỗi tải file")}
+    sendingNote=false;clearPendingFile();
+  }
+  const n=notes().length+1,docData={t:t.slice(0,280),by:ME,c:Date.now()};
+  if(fileMeta)docData.file=fileMeta;
+  Store.put({id:"n:"+rid(),kind:"note",data:docData});
+  act("note",`<b>${esc(ME)}</b> ghi thông báo #${n}: ${maskNoteLog(t,fileMeta)}`);
+  SND.notify();say("đã lưu thông báo #"+n);
+}
+function delNote(i){const o=noteAt(i);if(!o){SND.deny();return say("không có thông báo #"+i)}if(!canNote(o)){SND.deny();return say("không có quyền xóa #"+i)}if(o.data.file?.path)Store.removeFile(o.data.file.path);Store.del(o.id);if(editing===i)stopEdit();SND.tap();say("đã xóa #"+i)}
 function startEdit(i){const o=noteAt(i);if(!o){SND.deny();return say("không có thông báo #"+i)}if(!canNote(o)){SND.deny();return say("không có quyền sửa #"+i)}editing=i;$("ti").value=o.data.t;$("ti").focus();SND.tap();say("đang sửa #"+i+" — Enter để lưu, Esc để hủy")}
 function stopEdit(){editing=null;$("ti").value="";renderTerm()}
 function saveNote(i,t){const o=noteAt(i);if(!o){SND.deny();return say("không có thông báo #"+i)}if(!canNote(o)){SND.deny();return say("không có quyền sửa #"+i)}o.data.t=t.slice(0,280);Store.put(o);SND.ok();say("đã cập nhật #"+i)}
 function run(v){
   v=v.trim();
+  if(pendingFile){return addNote(v,pendingFile)}
   if(editing!=null){if(!v)return say("nội dung trống — Esc để hủy, hoặc dùng rm "+editing+" để xóa");const i=editing;editing=null;$("ti").value="";return saveNote(i,v)}
   if(!v)return;
   const m=v.match(/^(\S+)\s*([\s\S]*)$/),c=m[1].toLowerCase(),a=m[2].trim();
   switch(c){
-    case"help":return say("add <nội dung> · edit <số> [nội dung mới] · rm <số|all> · clear · whoami · online · goto <ops|board|team|profile> · hoặc gõ thẳng nội dung để thêm");
+    case"help":return say("add <nội dung> · edit <số> [nội dung mới] · rm <số|all> · clear · whoami · online · goto <ops|board|team|profile> · nút + để đính kèm file · hoặc gõ thẳng nội dung");
     case"ls":return say(notes().length+" thông báo");
     case"clear":return say("");
-    case"whoami":return say(member()?`${ME} · ${(U(ME).roles||[]).join(", ")||"chưa có vai trò"}`:"guest (chỉ xem)");
+    case"whoami":return say(member()?`${ME} (${U(ME).accId||"—"}) · ${(U(ME).roles||[]).join(", ")||"chưa có vai trò"}`:"guest (chỉ xem)");
     case"online":return say("online: "+[...Store.online()].join(", "));
     case"goto":case"cd":return go(a.replace(/^\//,"")||"ops");
-    case"add":case"note":return a?addNote(a):say("add: thiếu nội dung");
+    case"add":case"note":return a?addNote(a,null):say("add: thiếu nội dung");
     case"rm":case"del":
-      if(a==="all"){if(!isLeader())return say("chỉ leader được xóa toàn bộ");notes().forEach(o=>Store.del(o.id));return say("đã xóa toàn bộ thông báo")}
+      if(a==="all"){if(!isLeader())return say("chỉ leader được xóa toàn bộ");notes().forEach(o=>{if(o.data.file?.path)Store.removeFile(o.data.file.path);Store.del(o.id)});return say("đã xóa toàn bộ thông báo")}
       return /^\d+$/.test(a)?delNote(+a):say("dùng: rm <số> hoặc rm all");
     case"edit":{const i=parseInt(a,10);if(!i)return say("dùng: edit <số> [nội dung mới]");const rest=a.replace(/^\d+\s*/,"");return rest?saveNote(i,rest):startEdit(i)}
-    default:addNote(v);
+    default:addNote(v,null);
   }
 }
 function initTerm(){
-  const ti=$("ti");
+  const ti=$("ti"),tf=$("tFile"),exp=$("tExp");
+  const sendNow=()=>{const v=ti.value;if(editing==null)ti.value="";run(v)};
   ti.addEventListener("keydown",e=>{
-    if(e.key==="Enter"){e.preventDefault();const v=ti.value;if(editing==null)ti.value="";run(v)}
+    if(e.key==="Enter"){e.preventDefault();sendNow()}
     else if(e.key==="Escape"&&editing!=null){stopEdit();say("đã hủy sửa")}
     e.stopPropagation();
   });
+  $("tSend").onclick=sendNow;
+  $("tPlus").onclick=()=>{if(!member())return;tf.click()};
+  tf.onchange=()=>{
+    const f=tf.files&&tf.files[0];if(!f)return;
+    if(f.size>10*1024*1024){tf.value="";return toast("File vượt quá 10MB",1)}
+    if(pendingUrl)URL.revokeObjectURL(pendingUrl);
+    pendingFile=f;pendingUrl=f.type&&f.type.startsWith("image/")?URL.createObjectURL(f):null;
+    renderPrev();ti.focus();
+  };
+  exp.onclick=()=>{
+    const on=document.body.classList.toggle("notes-wide");
+    exp.textContent=on?"✕":"⤢";exp.className=on?"mini r":"mini";
+    exp.title=on?"Thu gọn khung notes":"Mở rộng khung notes";
+    mapSig="";if(PAGE==="ops")renderMap();
+  };
   $("tb").addEventListener("click",e=>{
+    const img=e.target.closest("img.nimg");
+    if(img){return modal("xem ảnh",`<div style="text-align:center"><img src="${img.src}" style="max-width:100%;max-height:70vh;border-radius:8px;border:1px solid var(--line)"></div>`)}
     const b=e.target.closest("button[data-a]");
     if(b){const i=+b.dataset.id;return b.dataset.a==="d"?delNote(i):startEdit(i)}
-    if(!getSelection().toString())ti.focus();
+    if(!e.target.closest("a")&&!getSelection().toString())ti.focus();
   });
 }
 
@@ -1783,16 +2015,19 @@ function renderProfile(){
   $("psel").innerHTML=us.map(x=>`<option${x.name===PROF?" selected":""}>${esc(x.name)}</option>`).join("");
   $("psel").onchange=()=>go("profile",$("psel").value);
   const s=stats(u.name),on=Store.online().has(u.name),ed=canEditUser(u.name),self=member()&&u.name===ME;
+  const rootLock=isRootUser(u);
   $("pcard").innerHTML=`<div class="pc"><span class="av bav" role="img" aria-label="Avatar ${esc(u.name)}"></span><h2>${esc(u.name)}</h2>
+<div class="uid-sub" id="pAccId" title="Bấm để sao chép UserID">(${esc(u.accId||"—")})</div>
 <div class="ps"><span class="dot${on?" on":""}"></span> ${on?"đang online":u.seen?"hoạt động "+ago(u.seen):"chưa đăng nhập"}${u.h?"":" · <span style='color:var(--amb)'>chưa kích hoạt</span>"}</div>
 <div class="rr">${rolesHTML(u.roles)}</div>
 ${u.ctf?`<a href="https://ctftime.org/user/${+u.ctf}" target="_blank" rel="noopener" style="font-size:12px">CTFtime #${+u.ctf} ↗</a>`:""}
 <div class="bio">${u.bio?esc(u.bio):'<span class="dim">// chưa có giới thiệu</span>'}</div>
-<div class="pbtn">${ed?`<button class="btn" id="pRole" type="button">vai trò</button><button class="btn" id="pBio" type="button">giới thiệu</button><button class="btn" id="pRen" type="button">đổi username</button>`:""}${self?`<button class="btn" id="pPw" type="button">đổi mật khẩu</button>`:""}${member()&&isLeader()?`<button class="btn dng" id="pDel" type="button">xóa tài khoản</button>`:""}</div></div>`;
+<div class="pbtn">${ed?`<button class="btn" id="pRole" type="button">vai trò</button><button class="btn" id="pBio" type="button">giới thiệu</button><button class="btn" id="pRen" type="button">đổi username</button>`:""}${self?`<button class="btn" id="pPw" type="button">đổi mật khẩu</button>`:""}${member()&&isLeader()&&!rootLock?`<button class="btn dng" id="pDel" type="button">xóa tài khoản</button>`:""}</div></div>`;
+  if($("pAccId"))$("pAccId").onclick=()=>u.accId&&copyStr(u.accId,"Đã sao chép UserID: "+u.accId);
   if($("pRole"))$("pRole").onclick=()=>roleModal(u.name);
   if($("pBio"))$("pBio").onclick=()=>bioModal(u.name);
   if($("pRen"))$("pRen").onclick=()=>renameModal(u.name);
-  if($("pPw"))$("pPw").onclick=pwModal;
+  if($("pPw"))$("pPw").onclick=()=>pwModal(false);
   if($("pDel"))$("pDel").onclick=()=>delUserModal(u.name);
   $("pscnt").textContent="chuỗi "+streak(u)+" ngày";
   const mxc=Math.max(1,...Object.values(s.cats));
@@ -2000,6 +2235,7 @@ function roleModal(n){
   modal("vai trò · "+n,`<form class="fm" id="rf"><div class="ck">${ROLES.map(r=>`<label style="border-color:${RC[r]}"><input type="checkbox" value="${r}"${(u.roles||[]).includes(r)?" checked":""}${r==="leader"&&!L?" disabled":""}> ${r==="leader"?"★ ":""}${r}</label>`).join("")}</div><div class="dim" style="font-size:11.5px">Mỗi người tự chọn vai trò của mình; chỉ leader cấp/thu hồi quyền leader.</div><div class="err" id="rfe"></div><div class="acts"><button class="btn" type="button" id="rcl">hủy</button><button class="btn pri" type="submit">lưu</button></div></form>`,mb=>{
     $("rcl").onclick=closeModal;
     $("rf").onsubmit=e=>{e.preventDefault();const r=qsa("input:checked",mb).map(i=>i.value);
+      if(isRootUser(u)&&!r.includes("leader"))return $("rfe").textContent="Tài khoản gốc không thể mất quyền leader";
       if(!r.includes("leader")&&(u.roles||[]).includes("leader")&&users().filter(x=>(x.roles||[]).includes("leader")).length<=1)return $("rfe").textContent="Team cần ít nhất một leader";
       u.roles=r;putUser(u);act("role",`<b>${esc(ME)}</b> đổi vai trò ${n===ME?"của mình":"của "+esc(n)} → ${r.map(esc).join(", ")||"(trống)"}`);closeModal();SND.ok()};
   });
@@ -2029,14 +2265,16 @@ function skillModal(n){
     $("kf").onsubmit=e=>{e.preventDefault();u.skills=list.filter(x=>x.k.trim()).map(x=>({k:x.k.trim().slice(0,40),lv:Math.max(1,Math.min(5,+x.lv||1))}));putUser(u);act("edit",`<b>${esc(ME)}</b> cập nhật kỹ năng${n!==ME?" của "+esc(n):""}`);closeModal();SND.ok()};
   });
 }
-function pwModal(){
-  modal("đổi mật khẩu",`<form class="fm" id="pf"><label>Mật khẩu hiện tại<input type="password" name="o" required autocomplete="current-password"></label><label>Mật khẩu mới (≥ 4 ký tự)<input type="password" name="n" required minlength="4" autocomplete="new-password"></label><label>Nhập lại<input type="password" name="n2" required autocomplete="new-password"></label><div class="err" id="pfe"></div><div class="acts"><button class="btn" type="button" id="pcl">hủy</button><button class="btn pri" type="submit">đổi</button></div></form>`,()=>{
+function pwModal(isRec){
+  modal(isRec?"khôi phục · đặt mật khẩu mới":"đổi mật khẩu",`<form class="fm" id="pf">
+${isRec?'<div class="dim" style="font-size:12px">Bạn đã đăng nhập bằng khóa khôi phục LEADER. Hãy đặt mật khẩu mới ngay để khóa kẻ lạ.</div>':'<label>Mật khẩu hiện tại<input type="password" name="o" required autocomplete="current-password"></label>'}
+<label>Mật khẩu mới (≥ 4 ký tự)<input type="password" name="n" required minlength="4" autocomplete="new-password"></label><label>Nhập lại<input type="password" name="n2" required autocomplete="new-password"></label><div class="err" id="pfe"></div><div class="acts"><button class="btn" type="button" id="pcl">hủy</button><button class="btn pri" type="submit">đổi</button></div></form>`,()=>{
     $("pcl").onclick=closeModal;
     $("pf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),u=U(ME);
-      if(await hashPw(f.get("o"),u.salt)!==u.h)return $("pfe").textContent="Sai mật khẩu hiện tại";
+      if(!isRec&&await hashPw(f.get("o"),u.salt)!==u.h)return $("pfe").textContent="Sai mật khẩu hiện tại";
       if(String(f.get("n")).length<4)return $("pfe").textContent="Mật khẩu mới quá ngắn";
       if(f.get("n")!==f.get("n2"))return $("pfe").textContent="Hai lần nhập không khớp";
-      u.salt=rid();u.h=await hashPw(f.get("n"),u.salt);putUser(u);LS.set("gg_sess",{n:ME,h:u.h});closeModal();toast("Đã đổi mật khẩu")};
+      u.salt=rid();u.h=await hashPw(f.get("n"),u.salt);putUser(u);LS.set("gg_sess",{n:ME,h:u.h});closeModal();SND.ok();toast("Đã đổi mật khẩu")};
   });
 }
 function renameModal(oldName){
@@ -2095,6 +2333,7 @@ function renameModal(oldName){
 function delUserModal(target){
   if(!member()||!isLeader())return;
   const u=U(target);if(!u)return;
+  if(isRootUser(u)){SND.deny();return toast("Tài khoản gốc không thể bị xóa",1)}
   const leaders=users().filter(x=>(x.roles||[]).includes("leader"));
   if((u.roles||[]).includes("leader")&&leaders.length<=1){
     SND.deny();return toast("Team cần ít nhất 1 leader — hãy cấp leader cho người khác trước khi xóa",1);
@@ -2124,15 +2363,15 @@ function adminModal(){
   if(!isLeader())return;
   const draw=()=>`<div class="fm"><div class="sec">// MÃ MỜI TEAM</div><form class="skr" id="invf" style="grid-template-columns:minmax(0,1fr) auto"><input name="inv" maxlength="40" placeholder="mã mời mới (vd GGCoXanh-2027)" aria-label="Mã mời mới"><button class="btn pri" type="submit">đổi mã</button></form>
 <div class="dim" style="font-size:11.5px">Mã hiện tại chỉ lưu dạng băm nên không xem lại được. ${Store.get("cfg:team")?"Đã đặt mã riêng.":"Đang dùng mã mặc định trong CFG.INVITE."}</div>
-<div class="sec">// THÀNH VIÊN</div><table class="ltab"><tbody>${users().map(u=>`<tr><td>${esc(u.name)}</td><td>${u.h?'<span style="color:var(--g)">đã kích hoạt</span>':'<span style="color:var(--amb)">chờ kích hoạt</span>'}</td><td style="text-align:right">${u.h&&u.name!==ME?`<button class="mini a" type="button" data-rs="${esc(u.name)}">reset mật khẩu</button> `:""}${u.name!==ME?`<button class="mini r" type="button" data-dl="${esc(u.name)}">xóa</button>`:""}</td></tr>`).join("")}</tbody></table>
+<div class="sec">// THÀNH VIÊN</div><table class="ltab"><tbody>${users().map(u=>{const rt=isRootUser(u);return`<tr><td>${esc(u.name)} <small class="dim">(${esc(u.accId||"—")})</small></td><td>${u.h?'<span style="color:var(--g)">đã kích hoạt</span>':'<span style="color:var(--amb)">chờ kích hoạt</span>'}</td><td style="text-align:right">${rt?'<span class="role leader" style="--rc:var(--mag)">ROOT LOCKED</span>':`${u.h&&u.name!==ME?`<button class="mini a" type="button" data-rs="${esc(u.name)}">reset mật khẩu</button> `:""}${u.name!==ME?`<button class="mini r" type="button" data-dl="${esc(u.name)}">xóa</button>`:""}`}</td></tr>`}).join("")}</tbody></table>
 <form class="skr" id="addf" style="grid-template-columns:minmax(0,1fr) 120px auto"><input name="n" maxlength="24" placeholder="tên thành viên mới" aria-label="Tên"><input name="ctf" type="number" placeholder="CTFtime id" aria-label="CTFtime id"><button class="btn" type="submit">+ thêm</button></form>
 <div class="dim" style="font-size:11.5px">Thành viên mới / bị reset sẽ dùng mã mời ở màn hình đăng nhập để đặt mật khẩu.</div><div class="err" id="ade"></div></div>`;
   modal("quản trị team",draw(),function mount(mb){
     $("invf").onsubmit=async e=>{e.preventDefault();const v=String(new FormData(e.target).get("inv")).trim();if(v.length<4)return $("ade").textContent="Mã mời tối thiểu 4 ký tự";Store.put({id:"cfg:team",kind:"cfg",data:{inv:await hashPw(v.toUpperCase(),"invite")}});act("sys",`<b>${esc(ME)}</b> đổi mã mời team`);toast("Đã đổi mã mời: "+v);mb.innerHTML=draw();mount(mb)};
-    $("addf").onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),n=String(f.get("n")).trim().replace(/\s+/g,"_");if(!/^[\w.\-]{2,24}$/.test(n))return $("ade").textContent="Tên 2–24 ký tự: chữ, số, _ . -";if(U(n))return $("ade").textContent="Tên đã tồn tại";markUserSkip(n,false);putUser({name:n,ctf:+f.get("ctf")||null,roles:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:users().length});act("team",`<b>${esc(ME)}</b> thêm thành viên <b>${esc(n)}</b>`);mb.innerHTML=draw();mount(mb)};
+    $("addf").onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),n=String(f.get("n")).trim().replace(/\s+/g,"_");if(!/^[\w.\-]{2,24}$/.test(n))return $("ade").textContent="Tên 2–24 ký tự: chữ, số, _ . -";if(U(n))return $("ade").textContent="Tên đã tồn tại";markUserSkip(n,false);putUser({name:n,ctf:+f.get("ctf")||null,accId:genAccId(),roles:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:users().length});act("team",`<b>${esc(ME)}</b> thêm thành viên <b>${esc(n)}</b>`);mb.innerHTML=draw();mount(mb)};
     mb.onclick=e=>{const rs=e.target.dataset.rs,dl=e.target.dataset.dl;
-      if(rs){const u=U(rs);delete u.h;delete u.salt;putUser(u);act("sys",`<b>${esc(ME)}</b> reset mật khẩu của <b>${esc(rs)}</b>`);mb.innerHTML=draw();mount(mb)}
-      if(dl){if(e.target.dataset.cf){markUserSkip(dl,true);Store.del(uid(dl));act("team",`<b>${esc(ME)}</b> xóa thành viên <b>${esc(dl)}</b>`);mb.innerHTML=draw();mount(mb)}else{e.target.dataset.cf=1;e.target.textContent="chắc chắn?"}}};
+      if(rs){const u=U(rs);if(!u||isRootUser(u))return;delete u.h;delete u.salt;putUser(u);act("sys",`<b>${esc(ME)}</b> reset mật khẩu của <b>${esc(rs)}</b>`);mb.innerHTML=draw();mount(mb)}
+      if(dl){const u=U(dl);if(!u||isRootUser(u))return;if(e.target.dataset.cf){markUserSkip(dl,true);Store.del(uid(dl));act("team",`<b>${esc(ME)}</b> xóa thành viên <b>${esc(dl)}</b>`);mb.innerHTML=draw();mount(mb)}else{e.target.dataset.cf=1;e.target.textContent="chắc chắn?"}}};
   });
 }
 // =====================================================================
@@ -2142,12 +2381,179 @@ const cv=$("rain"),cx=cv.getContext("2d");
 let cols,drops;
 const CH="01ABCDEF<>/#";
 function sizeRain(){cv.width=innerWidth;cv.height=innerHeight;cols=Math.floor(innerWidth/16);drops=Array.from({length:cols},()=>Math.random()*-60)}
+const DEF_THEME={lite:false,bgMode:"color",color:"#00A8FF",img:"",autoVibe:true,dim:55,titleColor:"#39FF14",customSet:false};
+let THEME=Object.assign({},DEF_THEME,LS.get("gg_theme_v1",{}));
+let RAIN_C1="#00A8FF",RAIN_C2="#00FFFF";
+
+function hexToRgb(hex){
+  const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex||"");
+  return m?[parseInt(m[1],16),parseInt(m[2],16),parseInt(m[3],16)]:[0,168,255];
+}
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h=0,s=0,l=(mx+mn)/2;
+  if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60}
+  return[h,s*100,l*100];
+}
+function hslToRgb(h,s,l){
+  h=((h%360)+360)%360;s/=100;l/=100;
+  const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;return Math.round(255*(l-a*Math.max(Math.min(k-3,9-k,1),-1)))};
+  return[f(0),f(8),f(4)];
+}
+const rgbHex=(r,g,b)=>"#"+[r,g,b].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,"0")).join("").toUpperCase();
+const hslHex=(h,s,l)=>rgbHex(...hslToRgb(h,s,l));
+
+function extractImageVibe(src){
+  return new Promise(res=>{
+    const im=new Image();
+    im.onload=()=>{
+      try{
+        const c=document.createElement("canvas");c.width=c.height=48;
+        const x=c.getContext("2d");x.drawImage(im,0,0,48,48);
+        const d=x.getImageData(0,0,48,48).data,buckets=Array.from({length:36},()=>({w:0,r:0,g:0,b:0}));
+        for(let i=0;i<d.length;i+=4){
+          const r=d[i],g=d[i+1],b=d[i+2],[,s,l]=rgbToHsl(r,g,b);
+          if(l<12||l>92||s<16)continue;
+          const wt=s*(1-Math.abs(l-52)/60),bi=Math.floor(rgbToHsl(r,g,b)[0]/10)%36;
+          buckets[bi].w+=wt;buckets[bi].r+=r*wt;buckets[bi].g+=g*wt;buckets[bi].b+=b*wt;
+        }
+        buckets.sort((a,b)=>b.w-a.w);
+        if(buckets[0].w>0){const b=buckets[0];res(rgbHex(Math.round(b.r/b.w),Math.round(b.g/b.w),Math.round(b.b/b.w)))}
+        else res("#60A5FA");
+      }catch(_){res("#60A5FA")}
+    };
+    im.onerror=()=>res("#60A5FA");
+    im.src=src;
+  });
+}
+function compressBgImage(file){
+  return new Promise((res,rej)=>{
+    const u=URL.createObjectURL(file),im=new Image();
+    im.onload=()=>{
+      URL.revokeObjectURL(u);
+      const max=1920,sc=Math.min(1,max/Math.max(im.width,im.height));
+      const w=Math.max(1,Math.round(im.width*sc)),h=Math.max(1,Math.round(im.height*sc));
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(im,0,0,w,h);
+      res(c.toDataURL("image/jpeg",.84));
+    };
+    im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Không đọc được ảnh"))};
+    im.src=u;
+  });
+}
+function applyTheme(){
+  const B=document.body,bgEl=$("bgImg"),dimEl=$("bgDim");
+  B.classList.toggle("lite-fx",!!(booted&&THEME.lite));
+  if(!booted||!member()){
+    B.classList.remove("authed","has-bg","has-dim");
+    bgEl.style.backgroundImage="";RAIN_C1="#00A8FF";RAIN_C2="#00FFFF";
+    return;
+  }
+  B.classList.add("authed");
+  const isImg=THEME.bgMode==="image"&&!!THEME.img;
+  B.classList.toggle("has-bg",isImg);
+  B.classList.toggle("has-dim",isImg||THEME.customSet);
+  bgEl.style.backgroundImage=isImg?`url(${THEME.img})`:"";
+  dimEl.style.background=`rgba(0,0,0,${Math.max(0,Math.min(85,+THEME.dim||0))/100})`;
+  if(!THEME.customSet&&!isImg){
+    ["--g","--g2","--g-rgb","--c","--mx","--blue","--bg","--panel","--surface","--panel-el","--line","--on-g","--hm-1","--hm-2","--hm-3","--hm-4","--brand-g","--brand-glow","--brand-c","--brand-m","--panel-glass","--surface-glass","--panel-el-glass"].forEach(k=>B.style.removeProperty(k));
+    RAIN_C1="#00A8FF";RAIN_C2="#00FFFF";
+    return;
+  }
+  const [r0,g0,b0]=hexToRgb(THEME.color||"#00A8FF"),[h,s,l]=rgbToHsl(r0,g0,b0);
+  const vs=s<12?s:Math.max(55,s);
+  const [gr,gg,gb]=hslToRgb(h,Math.min(100,vs),Math.min(64,Math.max(48,l)));
+  const gHex=rgbHex(gr,gg,gb);
+  const cHex=hslHex((h+10)%360,Math.min(100,vs),76);
+  const g2Hex=hslHex(h,Math.min(90,vs),34);
+  const bgRgb=hslToRgb(h,Math.min(38,vs),5),pnRgb=hslToRgb(h,Math.min(34,vs),10),sfRgb=hslToRgb(h,Math.min(36,vs),7);
+  const lum=(0.299*gr+0.587*gg+0.114*gb)/255;
+  const set=(k,v)=>B.style.setProperty(k,v);
+  set("--g",gHex);set("--g2",g2Hex);set("--g-rgb",`${gr},${gg},${gb}`);
+  set("--c",cHex);set("--mx",hslHex(h,Math.min(95,vs),68));set("--blue",hslHex((h+18)%360,Math.min(90,vs),70));
+  set("--bg",rgbHex(...bgRgb));set("--panel",rgbHex(...pnRgb));set("--surface",rgbHex(...sfRgb));set("--panel-el",rgbHex(...pnRgb));
+  set("--panel-glass",`rgba(${pnRgb[0]},${pnRgb[1]},${pnRgb[2]},.76)`);
+  set("--surface-glass",`rgba(${sfRgb[0]},${sfRgb[1]},${sfRgb[2]},.80)`);
+  set("--panel-el-glass",`rgba(${pnRgb[0]},${pnRgb[1]},${pnRgb[2]},.72)`);
+  set("--line",`rgba(${gr},${gg},${gb},.34)`);
+  set("--on-g",lum>.58?"#020A17":"#F8FAFC");
+  set("--hm-1",hslHex(h,Math.min(80,vs),18));set("--hm-2",hslHex(h,Math.min(85,vs),28));
+  set("--hm-3",hslHex(h,Math.min(92,vs),42));set("--hm-4",cHex);
+  const [tr,tg,tb]=hexToRgb(THEME.titleColor||"#39FF14"),[th,ts]=rgbToHsl(tr,tg,tb);
+  set("--brand-g",THEME.titleColor||"#39FF14");
+  set("--brand-glow",`rgba(${tr},${tg},${tb},.55)`);
+  set("--brand-c",hslHex((th+180)%360,Math.max(85,ts),68));
+  set("--brand-m",hslHex((th+210)%360,Math.max(90,ts),58));
+  RAIN_C1=gHex;RAIN_C2=cHex;
+}
+function saveTheme(){LS.set("gg_theme_v1",THEME);applyTheme()}
+function settingsModal(){
+  const draw=()=>`<div class="fm">
+<div class="st-sec">
+  <div class="st-row"><span><b>Giản lược Effects</b><br><small class="dim">Tắt nhiễu CRT & line chạy nền, giữ chớp nháy tên team</small></span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stLite"${THEME.lite?" checked":""} style="accent-color:var(--g);width:17px;height:17px"> Bật</label></div>
+  <div class="st-row"><span><b>Âm thanh hệ thống</b><br><small class="dim">Hiệu ứng bàn phím, thông báo & nút bấm</small></span><button class="btn${SND.isMuted()?"":" pri"}" id="stSnd" type="button"${SND.hasAudio()?"":" disabled"}>${SND.isMuted()?"♪ đang tắt":"♪ đang bật"}</button></div>
+</div>
+${member()?`<div class="st-sec">
+  <div class="sec" style="margin:0">// BACKGROUND & VIBE MÀU (CHỈ SAU SIGN-IN)</div>
+  <div class="st-rad">
+    <label><input type="radio" name="stBg" value="color"${THEME.bgMode==="color"?" checked":""}> Màu nền + Vibe</label>
+    <label><input type="radio" name="stBg" value="image"${THEME.bgMode==="image"?" checked":""}> Ảnh nền + Vibe</label>
+  </div>
+  <div id="stColBox" class="st-row" ${THEME.bgMode==="color"?"":"hidden"}><span>Tông màu nền & Vibe</span><input type="color" id="stColor" value="${esc(THEME.color)}"></div>
+  <div id="stImgBox" ${THEME.bgMode==="image"?"":"hidden"} style="display:grid;gap:8px">
+    <div class="st-row"><span>Chọn ảnh nền (tự fit không bể ảnh)</span><span style="display:flex;gap:6px"><button class="btn" id="stUpBtn" type="button">↑ tải ảnh</button>${THEME.img?'<button class="btn dng" id="stClrImg" type="button">xóa ảnh</button>':""}<input type="file" id="stImgIn" accept="image/*" hidden></span></div>
+    <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:12px;cursor:pointer"><input type="checkbox" id="stAutoV"${THEME.autoVibe?" checked":""} style="accent-color:var(--g)"> Tự chọn Vibe màu gần với ảnh nền nhất (khóa bảng màu)</label>
+    <div class="st-row"><span>Bảng Vibe màu cho ảnh</span><input type="color" id="stImgVibe" value="${esc(THEME.color)}"${THEME.autoVibe?" disabled":""}></div>
+  </div>
+  <div class="st-row"><span>Độ tối phủ nền (<b id="stDimV">${THEME.dim}%</b>)</span><input type="range" id="stDim" min="0" max="85" value="${THEME.dim}"></div>
+  <div class="st-row"><span>Màu chữ tiêu đề <b>Green Grasses</b><br><small class="dim">Màu phụ/bóng bên dưới tự lấy màu tương phản</small></span><input type="color" id="stTitle" value="${esc(THEME.titleColor)}"></div>
+</div>`:`<div class="dim" style="font-size:12px">Đăng nhập tài khoản để tùy chỉnh Background & Vibe màu cá nhân.</div>`}
+<div class="acts">${member()?'<button class="btn dng" id="stReset" type="button">khôi phục mặc định</button>':""}<button class="btn pri" id="stDone" type="button">xong</button></div>
+</div>`;
+  modal("cài đặt · settings",draw(),mb=>{
+    const bind=()=>{
+      $("stLite").onchange=e=>{THEME.lite=e.target.checked;saveTheme()};
+      $("stSnd").onclick=()=>{const on=SND.toggle();$("stSnd").textContent=on?"♪ đang bật":"♪ đang tắt";$("stSnd").className="btn"+(on?" pri":"")};
+      $("stDone").onclick=closeModal;
+      if(!member())return;
+      qsa('input[name="stBg"]',mb).forEach(r=>r.onchange=()=>{
+        THEME.bgMode=r.value;THEME.customSet=true;saveTheme();
+        $("stColBox").hidden=THEME.bgMode!=="color";
+        $("stImgBox").style.display=THEME.bgMode==="image"?"grid":"none";
+      });
+      if($("stImgBox"))$("stImgBox").style.display=THEME.bgMode==="image"?"grid":"none";
+      $("stColor").oninput=e=>{THEME.color=e.target.value;THEME.customSet=true;if($("stImgVibe"))$("stImgVibe").value=THEME.color;saveTheme()};
+      $("stImgVibe").oninput=e=>{THEME.color=e.target.value;THEME.customSet=true;$("stColor").value=THEME.color;saveTheme()};
+      $("stAutoV").onchange=async e=>{
+        THEME.autoVibe=e.target.checked;
+        if(THEME.autoVibe&&THEME.img){THEME.color=await extractImageVibe(THEME.img);THEME.customSet=true}
+        saveTheme();mb.innerHTML=draw();bind();
+      };
+      $("stUpBtn").onclick=()=>$("stImgIn").click();
+      $("stImgIn").onchange=async e=>{
+        const f=e.target.files&&e.target.files[0];if(!f)return;
+        try{
+          const dataUrl=await compressBgImage(f);
+          THEME.img=dataUrl;THEME.bgMode="image";THEME.customSet=true;
+          if(THEME.autoVibe)THEME.color=await extractImageVibe(dataUrl);
+          saveTheme();SND.ok();mb.innerHTML=draw();bind();
+        }catch(err){toast("⚠ "+(err.message||"Không lưu được ảnh"),1)}
+      };
+      if($("stClrImg"))$("stClrImg").onclick=()=>{THEME.img="";THEME.bgMode="color";saveTheme();mb.innerHTML=draw();bind()};
+      $("stDim").oninput=e=>{THEME.dim=+e.target.value;$("stDimV").textContent=THEME.dim+"%";saveTheme()};
+      $("stTitle").oninput=e=>{THEME.titleColor=e.target.value;THEME.customSet=true;saveTheme()};
+      $("stReset").onclick=()=>{THEME=Object.assign({},DEF_THEME);LS.del("gg_theme_v1");applyTheme();SND.tap();toast("Đã khôi phục giao diện mặc định");mb.innerHTML=draw();bind()};
+    };
+    bind();
+  });
+}
+
 function tick(){
+  if(booted&&THEME.lite)return;
   cx.fillStyle="rgba(5,5,8,.18)";cx.fillRect(0,0,cv.width,cv.height);
   cx.font="14px var(--f)";
   for(let i=0;i<cols;i++){
     const ch=Math.random()<.5?(Math.random()<.5?"0":"1"):CH[Math.random()*CH.length|0];
-    cx.fillStyle=Math.random()<.04?"#00FFFF":"#00A8FF";
+    cx.fillStyle=Math.random()<.04?RAIN_C2:RAIN_C1;
     cx.fillText(ch,i*16,drops[i]*16);
     if(drops[i]*16>cv.height&&Math.random()>.975)drops[i]=0;
     drops[i]++;
@@ -2257,11 +2663,13 @@ let booted=false;
 function bootIn(){
   if(booted)return;booted=true;
   const B=document.body;
+  applyTheme();
   document.querySelectorAll('.page.on .pn').forEach((p,i)=>p.style.setProperty('--d',i*90+'ms'));
   document.querySelectorAll('.pn .pb>*,.pn .tb>*').forEach(el=>el.style.setProperty('--i',Math.min([...el.parentNode.children].indexOf(el),9)));
   chartAnim=true;renderChart();
   B.classList.remove('pre');B.classList.add('boot');SND.boot();
   setTimeout(()=>B.classList.remove('boot'),3400);
+  if(NEED_PW_RESET){NEED_PW_RESET=false;setTimeout(()=>pwModal(true),700)}
 }
 let introOn=false;
 function endIntro(){introOn=false;T.forEach(clearTimeout);T.length=0;I.classList.add('gone');SND.end();bootIn()}
@@ -2380,16 +2788,40 @@ const Lock=(()=>{
         break;
       case"sess":if(/^(n|no|không)$/i.test(val))menu();else await finish(tmp.sess);break;
       case"menu":
-        if(val==="1"||/^login|user|tài/i.test(val))ask("user:","user");
+        if(val==="1"||/^login|user|tài/i.test(val))ask("user / #ID:","user");
         else if(val==="2"||/^inv|mã/i.test(val))ask("mã mời:","inv");
         else if(val==="3"||/^guest|khách/i.test(val))await finish(null);
         else{line("lựa chọn không hợp lệ","er");ask("chọn [1-3]:","menu")}
         break;
-      case"user":if(val==="back"){menu();break}if(!val){ask("user:","user");break}tmp.user=val;ask("password:","pw");break;
+      case"user":{
+        if(val==="back"){menu();break}
+        if(!val){ask("user / #ID:","user");break}
+        if(/^LEADER:(--5h4rk--|#?5H4RK)$/i.test(val)){
+          if(Store.mode()!=="supabase"){deny("✖ khôi phục LEADER chỉ khả dụng khi kết nối Supabase SQL");ask("user / #ID:","user");break}
+          line("› kích hoạt giao thức khôi phục tài khoản ROOT","cy");
+          ask("recovery key:","rec");break;
+        }
+        const normId=(val.startsWith("#")?val:"#"+val).toUpperCase();
+        const found=users().find(x=>x.name.toLowerCase()===val.toLowerCase()||(x.accId&&x.accId.toUpperCase()===normId));
+        tmp.user=val;tmp.matched=found?found.name:null;
+        ask("password:","pw");break}
+      case"rec":{
+        if(val==="back"){menu();break}
+        const rootU=users().find(isRootUser)||U("--5h4rk--");
+        if(!rootU){deny("✖ không tìm thấy tài khoản root");ask("user / #ID:","user");break}
+        if(await Store.verifyRecovery(raw)){
+          NEED_PW_RESET=true;
+          await finish(rootU.name,"recovery");
+        }else{
+          deny("✖ recovery key không đúng");
+          line('gõ <b>back</b> để quay lại menu',"dm");
+          ask("recovery key:","rec");
+        }
+        break}
       case"pw":{
-        const u=users().find(x=>x.name.toLowerCase()===String(tmp.user).toLowerCase());
+        const u=tmp.matched?U(tmp.matched):null;
         if(u&&u.h&&await hashPw(raw,u.salt)===u.h){await finish(u.name)}
-        else{deny(u&&!u.h?`✖ tài khoản ${esc(u.name)} chưa kích hoạt — dùng [2] mã mời để đặt mật khẩu`:"✖ sai user hoặc mật khẩu");line('gõ <b>back</b> để quay lại menu',"dm");ask("user:","user")}
+        else{deny(u&&!u.h?`✖ tài khoản ${esc(u.name)} chưa kích hoạt — dùng [2] mã mời để đặt mật khẩu`:"✖ sai user/#ID hoặc mật khẩu");line('gõ <b>back</b> để quay lại menu',"dm");ask("user / #ID:","user")}
         break}
       case"inv":
         if(val==="back"){menu();break}
@@ -2405,10 +2837,11 @@ const Lock=(()=>{
       case"pw1":if(raw.length<4){line("mật khẩu quá ngắn","er");ask("đặt mật khẩu (≥ 4 ký tự):","pw1");break}tmp.pw=raw;ask("nhập lại mật khẩu:","pw2");break;
       case"pw2":{
         if(raw!==tmp.pw){line("✖ hai lần nhập không khớp","er");ask("đặt mật khẩu (≥ 4 ký tự):","pw1");break}
-        const u=U(tmp.name)||{name:tmp.name,ctf:null,roles:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:users().length};
+        const u=U(tmp.name)||{name:tmp.name,ctf:null,accId:genAccId(),roles:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:users().length};
+        if(!u.accId)u.accId=isRootUser(u)?"#5H4RK":genAccId();
         markUserSkip(u.name,false);
         u.salt=rid();u.h=await hashPw(tmp.pw,u.salt);putUser(u);tmp.pw=null;
-        line("✔ đã đặt mật khẩu. Lần sau đăng nhập bằng [1] tài khoản.","ok");await finish(u.name,tmp.isNew?"new":"claim");break}
+        line(`✔ đã đặt mật khẩu. UserID của bạn: <b>${esc(u.accId)}</b>`,"ok");await finish(u.name,tmp.isNew?"new":"claim");break}
     }
     }finally{busy=false;if(step!=="done")I.disabled=false,I.focus()}
   }
@@ -2416,7 +2849,7 @@ const Lock=(()=>{
     step="done";I.disabled=true;P.textContent=">";
     if(name){ME=name;GUEST=false;LS.set("gg_sess",{n:name,h:U(name).h});Store.track(name)}else{ME=null;GUEST=true}
     line("");line(name?`✔ ACCESS GRANTED · chào mừng trở lại, <b>${esc(name)}</b>`:"✔ truy cập chế độ khách · chỉ xem","ok");SND.grant();
-    if(name)act("login",how==="new"?`<b>${esc(name)}</b> gia nhập căn cứ — chào mừng agent mới`:how==="claim"?`<b>${esc(name)}</b> đã kích hoạt tài khoản`:`<b>${esc(name)}</b> đã đăng nhập vào căn cứ`);
+    if(name)act("login",how==="new"?`<b>${esc(name)}</b> gia nhập căn cứ — chào mừng agent mới`:how==="claim"?`<b>${esc(name)}</b> đã kích hoạt tài khoản`:how==="recovery"?`<b>${esc(name)}</b> đăng nhập qua giao thức khôi phục`:`<b>${esc(name)}</b> đã đăng nhập vào căn cứ`);
     await wait(900);
     $("lock").classList.add("out");SND.crt();
     await wait(600);$("lock").classList.add("gone");
@@ -2527,7 +2960,9 @@ document.addEventListener("keydown",e=>{
   const k={"1":"ops","2":"board","3":"team","4":"profile"}[e.key];if(k&&!e.ctrlKey&&!e.metaKey&&!e.altKey)go(k);
 },true);
 qsa("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
+let NEED_PW_RESET=false;
 $("cmdBtn").onclick=openCmdPalette;
+$("setBtn").onclick=settingsModal;
 $("meBtn").onclick=()=>{if(member())go("profile",ME)};
 $("outBtn").onclick=()=>{if(member())act("login",`<b>${esc(ME)}</b> rời căn cứ`);LS.del("gg_sess");setTimeout(()=>location.reload(),150)};
 $("addChal").onclick=()=>chalModal(null);
