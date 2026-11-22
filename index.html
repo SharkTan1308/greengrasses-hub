@@ -1283,10 +1283,25 @@ const Store=(()=>{
       saveLocal();bc&&bc.postMessage({t:"put",doc});
     }
   }
+  async function putAsync(doc){
+    doc.ts=Date.now();docs.set(doc.id,doc);emit(doc,"self",false);
+    if(mode==="supabase"){const r=await sb.from(CFG.TABLE).upsert({id:doc.id,kind:doc.kind,data:doc.data,ts:doc.ts});if(r.error)toast("⚠ Ghi Supabase lỗi: "+r.error.message,1)}
+    else{saveLocal();bc&&bc.postMessage({t:"put",doc})}
+  }
   function del(id){
     const old=docs.get(id);if(!old)return;docs.delete(id);emit(old,"self",true);
     if(mode==="supabase")sb.from(CFG.TABLE).delete().eq("id",id).then(r=>{if(r.error)toast("⚠ Xóa Supabase lỗi: "+r.error.message,1)});
     else{saveLocal();bc&&bc.postMessage({t:"del",id})}
+  }
+  async function delMany(ids){
+    if(!ids||!ids.length)return;
+    ids.forEach(id=>{const old=docs.get(id);if(old){docs.delete(id);emit(old,"self",true)}});
+    if(mode==="supabase"&&sb){
+      for(let i=0;i<ids.length;i+=100){
+        const r=await sb.from(CFG.TABLE).delete().in("id",ids.slice(i,i+100));
+        if(r.error)toast("⚠ Xóa hàng loạt lỗi: "+r.error.message,1);
+      }
+    }else{saveLocal();bc&&ids.forEach(id=>bc.postMessage({t:"del",id}))}
   }
   const all=kind=>{const o=[];docs.forEach(d=>{if(d.kind===kind)o.push(d)});return o};
   function states(){
@@ -1317,7 +1332,7 @@ const Store=(()=>{
     if(mode==="supabase"&&sb&&path)sb.storage.from("hub-files").remove([path]).catch(()=>{});
   }
   return{
-    init,put,del,all,get:id=>docs.get(id),on:f=>subs.add(f),mode:()=>mode,verifyRecovery,uploadFile,removeFile,
+    init,put,putAsync,del,delMany,all,get:id=>docs.get(id),on:f=>subs.add(f),mode:()=>mode,verifyRecovery,uploadFile,removeFile,
     track(n,chId){me=n;if(chId!==undefined)focus=chId||null;if(mode==="supabase"&&ch)ch.track({n:me,ch:focus}).catch(()=>{});else{hb();emit({id:"~presence",kind:"presence"},"self")}},
     online(){return new Set(states().map(x=>x.n).filter(Boolean))},
     focusOn(id){return[...new Set(states().filter(x=>x.ch===id&&x.n).map(x=>x.n))]}
@@ -1337,6 +1352,45 @@ const isRootUser=u=>!!(u&&(u.root===true||u.accId==="#5H4RK"||CFG.LEADER.include
 const member=()=>!!ME&&!GUEST;
 const canEditUser=n=>member()&&(n===ME||isLeader());
 const rolesHTML=r=>(r&&r.length?r:[]).slice().sort((a,b)=>ROLES.indexOf(a)-ROLES.indexOf(b)).map(x=>`<span class="role ${x}" style="--rc:${RC[x]||"#94A3B8"}">${x==="leader"?"★ ":""}${esc(x)}</span>`).join(" ")||'<span class="dim" style="font-size:11px">chưa chọn vai trò</span>';
+const NET_IP={v4:"",v6:""};
+async function fetchNetInfo(ms=1800){
+  const grab=async u=>{
+    const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),ms);
+    try{const r=await fetch(u,{signal:ac.signal,cache:"no-store"});if(!r.ok)return"";const j=await r.json();return j&&j.ip?String(j.ip):""}
+    catch(_){return""}finally{clearTimeout(tm)}
+  };
+  const [a,b]=await Promise.all([NET_IP.v4?Promise.resolve(NET_IP.v4):grab("https://api4.ipify.org?format=json"),NET_IP.v6?Promise.resolve(NET_IP.v6):grab("https://api6.ipify.org?format=json")]);
+  if(a)NET_IP.v4=a;if(b&&b!==a)NET_IP.v6=b;
+  return NET_IP;
+}
+function validateUsernameClean(name){
+  const n=String(name||"").trim();
+  if(!/^[\w.\-]{2,24}$/.test(n))return"Tên 2–24 ký tự: chữ, số, _ . -";
+  // 1) Lọc từ vô nghĩa / bot rác
+  if(/^\d+$/.test(n))return"Tên không được chỉ gồm toàn số";
+  if(/(.)\1{2,}/i.test(n))return"Tên chứa ký tự lặp lại vô nghĩa (≥ 3 ký tự giống nhau liền kề)";
+  if(/qwerty|asdf|zxcv|hjkl|uiop|qaz|wsx|12345|01234|98765/i.test(n))return"Tên chứa chuỗi gõ bừa bàn phím";
+  if(/^[a-z]+_[a-z]+_\d{2,}_[0-9a-f]{4,}$/i.test(n))return"Tên khớp mẫu bot tự sinh";
+  if((n.match(/\d/g)||[]).length>=6)return"Tên chứa quá nhiều chữ số";
+  const letters=n.replace(/[^a-zA-Z]/g,"").toLowerCase();
+  if(letters.length>=5&&!/[aeiouy]/.test(letters))return"Tên vô nghĩa (thiếu nguyên âm)";
+  if(/[^aeiouy_\-.\d]{6,}/i.test(n))return"Tên chứa cụm phụ âm vô nghĩa";
+  if(letters.length>=6&&/^(.{2,4})\1+$/.test(letters))return"Tên lặp đoạn vô nghĩa";
+  // 2) Chặn nếu có đoạn >= 3 ký tự trùng với hơn 2 tài khoản đang có
+  const SAFE=new Set(["ctf","pwn","web","rev","dev","sec","pro","bot"]);
+  const low=n.toLowerCase(),subs=new Set();
+  for(let i=0;i<=low.length-3;i++){
+    const s=low.slice(i,i+3);
+    if(/^[a-z]{3}$/.test(s)&&!SAFE.has(s))subs.add(s);
+  }
+  const existing=users().map(u=>u.name.toLowerCase());
+  for(const sub of subs){
+    let cnt=0;
+    for(const ex of existing)if(ex.includes(sub))cnt++;
+    if(cnt>=2)return`Từ chối: đoạn "${sub}" đã trùng ở quá 2 tài khoản`;
+  }
+  return"";
+}
 function genAccId(excludeSet){
   const H="0123456789ABCDEF",used=excludeSet||new Set(users().map(u=>u.accId).filter(Boolean));
   for(let k=0;k<5000;k++){
@@ -2316,7 +2370,7 @@ function renameModal(oldName){
 <div class="acts"><button class="btn" type="button" id="rncl">hủy</button><button class="btn pri" type="submit">cập nhật</button></div>
 </form>`,()=>{
     $("rncl").onclick=closeModal;
-    $("rnf").onsubmit=e=>{
+    $("rnf").onsubmit=async e=>{
       e.preventDefault();
       const raw=String(new FormData(e.target).get("n")).trim().replace(/\s+/g,"_");
       if(!/^[\w.\-]{2,24}$/.test(raw))return $("rne").textContent="Tên 2–24 ký tự: chữ, số, _ . -";
@@ -2338,7 +2392,7 @@ function renameModal(oldName){
       if(PROF===oldName)PROF=raw;
       if(HSEL===oldName)HSEL=raw;
       if(AV&&AV.name===oldName)AV.name=raw;
-      putUser(newU);
+      await Store.putAsync(Object.assign({id:uid(newU.name),kind:"user",data:newU}));
       if(!sameId)Store.del(uid(oldName));
       Store.all("chal").forEach(c=>{
         const d=c.data;let chg=false;
@@ -2395,10 +2449,23 @@ function adminModal(){
 <div class="dim" style="font-size:11.5px">Mã hiện tại chỉ lưu dạng băm nên không xem lại được. ${Store.get("cfg:team")?"Đã đặt mã riêng.":"Đang dùng mã mặc định trong CFG.INVITE."}</div>
 <div class="sec">// THÀNH VIÊN</div><table class="ltab"><tbody>${users().map(u=>{const rt=isRootUser(u);return`<tr><td>${esc(u.name)} <small class="dim">(${esc(u.accId||"—")})</small></td><td>${u.h?'<span style="color:var(--g)">đã kích hoạt</span>':'<span style="color:var(--amb)">chờ kích hoạt</span>'}</td><td style="text-align:right">${rt?'<span class="role leader" style="--rc:var(--mag)">ROOT LOCKED</span>':`${u.h&&u.name!==ME?`<button class="mini a" type="button" data-rs="${esc(u.name)}">reset mật khẩu</button> `:""}${u.name!==ME?`<button class="mini r" type="button" data-dl="${esc(u.name)}">xóa</button>`:""}`}</td></tr>`}).join("")}</tbody></table>
 <form class="skr" id="addf" style="grid-template-columns:minmax(0,1fr) 120px auto"><input name="n" maxlength="24" placeholder="tên thành viên mới" aria-label="Tên"><input name="ctf" type="number" placeholder="CTFtime id" aria-label="CTFtime id"><button class="btn" type="submit">+ thêm</button></form>
-<div class="dim" style="font-size:11.5px">Thành viên mới / bị reset sẽ dùng mã mời ở màn hình đăng nhập để đặt mật khẩu.</div><div class="err" id="ade"></div></div>`;
+<div class="acts" style="justify-content:space-between;align-items:center;margin-top:4px"><span class="dim" style="font-size:11.5px">Thành viên mới dùng mã mời để đặt mật khẩu.</span><button class="btn dng" type="button" id="admDelAll">✖ xóa tất cả (trừ root)</button></div><div class="err" id="ade"></div></div>`;
   modal("quản trị team",draw(),function mount(mb){
     $("invf").onsubmit=async e=>{e.preventDefault();const v=String(new FormData(e.target).get("inv")).trim();if(v.length<4)return $("ade").textContent="Mã mời tối thiểu 4 ký tự";Store.put({id:"cfg:team",kind:"cfg",data:{inv:await hashPw(v.toUpperCase(),"invite")}});act("sys",`<b>${esc(ME)}</b> đổi mã mời team`);toast("Đã đổi mã mời: "+v);mb.innerHTML=draw();mount(mb)};
     $("addf").onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),n=String(f.get("n")).trim().replace(/\s+/g,"_");if(!/^[\w.\-]{2,24}$/.test(n))return $("ade").textContent="Tên 2–24 ký tự: chữ, số, _ . -";if(U(n))return $("ade").textContent="Tên đã tồn tại";markUserSkip(n,false);putUser({name:n,ctf:+f.get("ctf")||null,accId:genAccId(),roles:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:users().length});act("team",`<b>${esc(ME)}</b> thêm thành viên <b>${esc(n)}</b>`);mb.innerHTML=draw();mount(mb)};
+    const da=$("admDelAll");
+    if(da)da.onclick=async()=>{
+      const targets=users().filter(u=>!isRootUser(u));
+      if(!targets.length)return toast("Không có tài khoản phụ nào để xóa");
+      if(!da.dataset.cf){da.dataset.cf=1;da.textContent=`⚠ bấm lại để xóa ${targets.length} tài khoản`;setTimeout(()=>{if(da.isConnected){delete da.dataset.cf;da.textContent="✖ xóa tất cả (trừ root)"}},3500);return}
+      da.disabled=true;da.textContent="đang xóa…";
+      const seedSet=new Set(M.map(x=>x[0].toLowerCase()));
+      targets.forEach(u=>{if(seedSet.has(u.name.toLowerCase()))markUserSkip(u.name,true)});
+      await Store.delMany(targets.map(u=>uid(u.name)));
+      act("team",`<b>${esc(ME)}</b> đã xóa toàn bộ ${targets.length} tài khoản phụ (giữ lại root)`);
+      SND.tap();toast(`Đã xóa sạch ${targets.length} tài khoản`);
+      mb.innerHTML=draw();mount(mb);
+    };
     mb.onclick=e=>{const rs=e.target.dataset.rs,dl=e.target.dataset.dl;
       if(rs){const u=U(rs);if(!u||isRootUser(u))return;delete u.h;delete u.salt;putUser(u);act("sys",`<b>${esc(ME)}</b> reset mật khẩu của <b>${esc(rs)}</b>`);mb.innerHTML=draw();mount(mb)}
       if(dl){const u=U(dl);if(!u||isRootUser(u))return;if(e.target.dataset.cf){markUserSkip(dl,true);Store.del(uid(dl));act("team",`<b>${esc(ME)}</b> xóa thành viên <b>${esc(dl)}</b>`);mb.innerHTML=draw();mount(mb)}else{e.target.dataset.cf=1;e.target.textContent="chắc chắn?"}}};
@@ -3010,6 +3077,7 @@ const Lock=(()=>{
     await type("[ secure shell v4.2 · node VN-HCM-01 · tty1 ]","dm");
     await type("› kiểm tra tính toàn vẹn hệ thống ............ OK","cy");
     const sy=line("› đồng bộ dữ liệu team ........................ ","cy");
+    fetchNetInfo();
     const mode=await Store.init();seed();
     sy.innerHTML+=mode==="supabase"?'<b>OK</b> (supabase realtime)':'<b>OK</b> (local · trình duyệt này)';
     await type("› trạng thái căn cứ: LOCKED","er");
@@ -3080,7 +3148,8 @@ const Lock=(()=>{
         break;
       case"name":{
         const n=val.replace(/\s+/g,"_");
-        if(!/^[\w.\-]{2,24}$/.test(n)){line("tên 2–24 ký tự: chữ, số, _ . -","er");ask("tên của bạn:","name");break}
+        const bad=validateUsernameClean(n);
+        if(bad){deny("✖ "+bad);ask("tên của bạn:","name");break}
         const ex=users().find(x=>x.name.toLowerCase()===n.toLowerCase());
         if(ex&&ex.h){line(`✖ ${esc(ex.name)} đã có mật khẩu — dùng [1] tài khoản, hoặc nhờ leader reset`,"er");menu();break}
         tmp.name=ex?ex.name:n;tmp.isNew=!ex;line(ex?`› kích hoạt tài khoản <b>${esc(ex.name)}</b>`:`› tạo tài khoản mới <b>${esc(n)}</b>`,"cy");ask("đặt mật khẩu (≥ 4 ký tự):","pw1");break}
@@ -3099,7 +3168,10 @@ const Lock=(()=>{
     step="done";I.disabled=true;P.textContent=">";
     if(name){ME=name;GUEST=false;LS.set("gg_sess",{n:name,h:U(name).h});Store.track(name)}else{ME=null;GUEST=true}
     line("");line(name?`✔ ACCESS GRANTED · chào mừng trở lại, <b>${esc(name)}</b>`:"✔ truy cập chế độ khách · chỉ xem","ok");SND.grant();
-    if(name)act("login",how==="new"?`<b>${esc(name)}</b> gia nhập căn cứ — chào mừng agent mới`:how==="claim"?`<b>${esc(name)}</b> đã kích hoạt tài khoản`:how==="recovery"?`<b>${esc(name)}</b> đăng nhập qua giao thức khôi phục`:`<b>${esc(name)}</b> đã đăng nhập vào căn cứ`);
+    if(name){
+      await fetchNetInfo(600);
+      act("login",how==="new"?`<b>${esc(name)}</b> gia nhập căn cứ — chào mừng agent mới`:how==="claim"?`<b>${esc(name)}</b> đã kích hoạt tài khoản`:how==="recovery"?`<b>${esc(name)}</b> đăng nhập qua giao thức khôi phục`:`<b>${esc(name)}</b> đã đăng nhập vào căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});
+    }
     await wait(900);
     $("lock").classList.add("out");SND.crt();
     await wait(600);$("lock").classList.add("gone");
@@ -3214,7 +3286,7 @@ let NEED_PW_RESET=false;
 $("cmdBtn").onclick=openCmdPalette;
 $("setBtn").onclick=settingsModal;
 $("meBtn").onclick=()=>{if(member())go("profile",ME)};
-$("outBtn").onclick=()=>{if(member())act("login",`<b>${esc(ME)}</b> rời căn cứ`);LS.del("gg_sess");setTimeout(()=>location.reload(),150)};
+$("outBtn").onclick=()=>{if(member())act("login",`<b>${esc(ME)}</b> rời căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});LS.del("gg_sess");setTimeout(()=>location.reload(),220)};
 $("addChal").onclick=()=>chalModal(null);
 const skipBtn=$("skip");
 if(skipBtn){
