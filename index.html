@@ -882,9 +882,19 @@ body.is-guest .g-term{display:none !important}
 .cm-ico.empty{color:var(--mute);font-size:10px;border-style:dashed}
 @media (max-width:1100px),(hover:none) and (pointer:coarse){#stCurSec{display:none !important}}
 
-/* ===== UI Scale, Contest Focus Mode & Preset UI ===== */
-body.authed{font-size:var(--fs-base,14px)}
-body.authed .ev,body.authed .lr,body.authed .tl,body.authed .card .cn{font-size:calc(var(--fs-base,14px) * .95)}
+/* ===== UI Scale (PC + Mobile đều đổi rõ), Contest Focus Mode, Preset & In-App Popup ===== */
+body.authed{font-size:calc(14px * var(--ui-k,1))}
+body.authed .ev .nm{font-size:calc(15px * var(--ui-k,1))}
+body.authed .ev .dt,body.authed .stat,body.authed .chip,body.authed .lr,body.authed .lnr .nm3,body.authed .sv,body.authed .sk,body.authed .pc .bio,body.authed .btn{font-size:calc(12.5px * var(--ui-k,1))}
+body.authed .tl,body.authed #ti,body.authed #tp{font-size:calc(13px * var(--ui-k,1))}
+body.authed .tag,body.authed .cno,body.authed .rc .rs,body.authed .mi small{font-size:calc(11.5px * var(--ui-k,1))}
+body.authed .card .cn{font-size:calc(13.5px * var(--ui-k,1))}
+body.authed .card .cw{font-size:calc(11.5px * var(--ui-k,1))}
+body.authed .ph{font-size:calc(12.5px * var(--ui-k,1))}
+@media (max-width:1100px){
+  body.authed .nav button{font-size:calc(12px * var(--ui-k,1))}
+  body.authed .tool{font-size:calc(12px * var(--ui-k,1))}
+}
 body.authed.focus-mode .g-map,body.authed.focus-mode .g-sys,body.authed.focus-mode .g-lineup{opacity:.42;transition:opacity .25s}
 body.authed.focus-mode .g-map:hover,body.authed.focus-mode .g-sys:hover,body.authed.focus-mode .g-lineup:hover{opacity:1}
 body.authed.focus-mode .hexl,body.authed.focus-mode .hexv{opacity:.12}
@@ -896,6 +906,10 @@ body.authed.focus-mode .g-hero,body.authed.focus-mode .g-term,body.authed.focus-
 .scale-seg{display:flex;gap:4px}
 .scale-seg button{background:transparent;border:1px solid var(--line);color:var(--mute);border-radius:5px;padding:3px 9px;font-size:11.5px}
 .scale-seg button.on{background:var(--g);border-color:var(--g);color:var(--on-g,#020A17);font-weight:700}
+#inAppPush{position:fixed;top:max(14px,env(safe-area-inset-top,14px));right:14px;left:14px;z-index:135;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none}
+.push-pop{pointer-events:auto;max-width:min(94vw,380px);width:100%;background:rgba(7,11,18,.95);border:1px solid var(--g);border-left:4px solid var(--g);border-radius:10px;padding:10px 12px;box-shadow:0 8px 30px rgba(0,0,0,.65),0 0 18px rgba(var(--g-rgb),.28);cursor:pointer;animation:itIn .28s ease-out both;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.push-pop b{display:block;color:var(--g);font-size:12.5px;margin-bottom:2px}
+.push-pop span{display:block;color:var(--text);font-size:12px;line-height:1.4;overflow-wrap:anywhere}
 </style>
 </head>
 <body class="pre">
@@ -1076,6 +1090,7 @@ body.authed.focus-mode .g-hero,body.authed.focus-mode .g-term,body.authed.focus-
 
 <div id="modal" hidden><div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="mh"><span id="mt"></span><button id="mx" type="button" aria-label="Đóng">✕</button></div><div class="mb" id="mb"></div></div></div>
 <div id="toast" aria-live="polite"></div>
+<div id="inAppPush" aria-live="polite"></div>
 <div id="crt" aria-hidden="true"><i class="grain"></i><i class="scl"></i><i class="vig"></i><i class="flk"></i></div>
 <div id="bsc" aria-hidden="true"></div>
 
@@ -1886,7 +1901,7 @@ function renderTerm(){
       if((f.mime||"").startsWith("image/"))fhtml=`<div><img class="nimg" src="${safeF}" alt="${esc(f.name)}" data-img="${safeF}"></div><div class="nfile">🖼 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
       else fhtml=`<div class="nfile">📎 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
     }
-    return `<div class="tl"><span class="id">[${i+1}]</span><span class="ts">${fmtT.format(o.data.c)}</span><span class="tx"><span style="color:var(--c)">${esc(o.data.by)}</span>: ${renderNoteText(o.data.t)}${fhtml}</span><span class="ac">${canNote(o)?`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button><button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span></div>`;
+    return `<div class="tl"><span class="id">[${i+1}]</span><span class="ts">${fmtT.format(o.data.c)}</span><span class="ac"><button data-a="c" data-id="${i+1}" aria-label="Sao chép ${i+1}">copy</button>${canNote(o)?`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button><button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span></div>`;
   }).join(""):'<div class="tl sys">(chưa có thông báo nào)</div>';
   if(fb)h+=`<div class="tl fb">${fb}</div>`;
   b.innerHTML=h;b.scrollTop=end?b.scrollHeight:keep;
@@ -1935,8 +1950,15 @@ function run(v){
     default:addNote(v,null);
   }
 }
+function attachNoteFile(f){
+  if(!f||!member())return;
+  if(f.size>10*1024*1024){if($("tFile"))$("tFile").value="";return toast("File vượt quá 10MB",1)}
+  if(pendingUrl)URL.revokeObjectURL(pendingUrl);
+  pendingFile=f;pendingUrl=f.type&&f.type.startsWith("image/")?URL.createObjectURL(f):null;
+  renderPrev();$("ti")?.focus();SND.tap();
+}
 function initTerm(){
-  const ti=$("ti"),tf=$("tFile"),exp=$("tExp");
+  const ti=$("ti"),tf=$("tFile"),exp=$("tExp"),termEl=$("term");
   const sendNow=()=>{const v=ti.value;if(editing==null)ti.value="";run(v)};
   ti.addEventListener("keydown",e=>{
     if(e.key==="Enter"){e.preventDefault();sendNow()}
@@ -1945,13 +1967,24 @@ function initTerm(){
   });
   $("tSend").onclick=sendNow;
   $("tPlus").onclick=()=>{if(!member())return;tf.click()};
-  tf.onchange=()=>{
-    const f=tf.files&&tf.files[0];if(!f)return;
-    if(f.size>10*1024*1024){tf.value="";return toast("File vượt quá 10MB",1)}
-    if(pendingUrl)URL.revokeObjectURL(pendingUrl);
-    pendingFile=f;pendingUrl=f.type&&f.type.startsWith("image/")?URL.createObjectURL(f):null;
-    renderPrev();ti.focus();
-  };
+  tf.onchange=()=>{const f=tf.files&&tf.files[0];if(f)attachNoteFile(f)};
+  // Paste (Ctrl+V / Dán trên điện thoại) bất kỳ file hoặc ảnh nào vào ~/notes
+  termEl.addEventListener("paste",e=>{
+    if(!member())return;
+    const cd=e.clipboardData;if(!cd)return;
+    let file=cd.files&&cd.files[0];
+    if(!file&&cd.items){
+      for(const it of cd.items){if(it.kind==="file"){file=it.getAsFile();if(file)break}}
+    }
+    if(file){
+      e.preventDefault();
+      if(!file.name||file.name==="image.png"){
+        const ext=fileExt(file.name)||(file.type&&file.type.split("/")[1])||"png";
+        file=new File([file],`paste-${Date.now().toString().slice(-5)}.${ext}`,{type:file.type||"application/octet-stream"});
+      }
+      attachNoteFile(file);
+    }
+  });
   exp.onclick=()=>{
     const on=document.body.classList.toggle("notes-wide");
     exp.textContent=on?"✕":"⤢";exp.className=on?"mini r":"mini";
@@ -1962,7 +1995,11 @@ function initTerm(){
     const img=e.target.closest("img.nimg");
     if(img){return modal("xem ảnh",`<div style="text-align:center"><img src="${img.src}" style="max-width:100%;max-height:70vh;border-radius:8px;border:1px solid var(--line)"></div>`)}
     const b=e.target.closest("button[data-a]");
-    if(b){const i=+b.dataset.id;return b.dataset.a==="d"?delNote(i):startEdit(i)}
+    if(b){
+      const i=+b.dataset.id,a=b.dataset.a;
+      if(a==="c"){const o=noteAt(i);if(o)copyStr([o.data.t,o.data.file?.url].filter(Boolean).join("\n"),"Đã sao chép");return}
+      return a==="d"?delNote(i):startEdit(i);
+    }
     if(!e.target.closest("a")&&!getSelection().toString())ti.focus();
   });
 }
@@ -2579,15 +2616,36 @@ const VIBE_PRESETS=[
   {name:"Tokyo Violet",color:"#A855F7",title:"#00FFFF",custom:true},
   {name:"Amber Term",color:"#FFB300",title:"#39FF14",custom:true}
 ];
-function deskPush(title,body,onClick){
-  if(!THEME.deskNotify||!("Notification" in window)||Notification.permission!=="granted")return;
-  try{
-    const n=new Notification(title,{body,icon:"https://greengrasses.duckdns.org/og.png",tag:"gg-hub-"+Date.now()});
-    n.onclick=()=>{window.focus();onClick&&onClick();n.close()};
-    setTimeout(()=>n.close(),6500);
-  }catch(_){}
+let SW_REG=null;
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").then(r=>{SW_REG=r}).catch(()=>{});
 }
-let THEME=Object.assign({},DEF_THEME,LS.get("gg_theme_v1",{}));
+function showInAppPush(title,body,onClick){
+  const box=$("inAppPush");if(!box)return;
+  const d=document.createElement("div");d.className="push-pop";
+  d.innerHTML=`<b>${esc(title)}</b><span>${esc(body)}</span>`;
+  d.onclick=()=>{onClick&&onClick();d.remove()};
+  box.appendChild(d);
+  setTimeout(()=>{if(d.isConnected)d.remove()},5500);
+}
+async function deskPush(title,body,onClick,forcePopup){
+  if(!THEME.deskNotify)return;
+  let shownSys=false;
+  if("Notification" in window&&Notification.permission==="granted"){
+    const opt={body,icon:"https://greengrasses.duckdns.org/og.png",badge:"https://greengrasses.duckdns.org/og.png",tag:"gg-hub-"+Date.now(),vibrate:[120,60,120]};
+    try{
+      const reg=SW_REG||(navigator.serviceWorker?await navigator.serviceWorker.getRegistration().catch(()=>null):null);
+      if(reg&&reg.showNotification){await reg.showNotification(title,opt);shownSys=true}
+      else{
+        const n=new Notification(title,opt);
+        n.onclick=()=>{window.focus();onClick&&onClick();n.close()};
+        setTimeout(()=>n.close(),6500);
+        shownSys=true;
+      }
+    }catch(_){}
+  }
+  if(!shownSys||forcePopup||isTouchPhone())showInAppPush(title,body,onClick);
+} THEME=Object.assign({},DEF_THEME,LS.get("gg_theme_v1",{}));
 let RAIN_C1="#00A8FF",RAIN_C2="#00FFFF",CUR_PACK=null;
 
 // ===== IndexedDB lưu file âm nhạc (tới 500MB) & Cursor Pack dung lượng lớn =====
@@ -2920,13 +2978,13 @@ function applyTheme(){
   BGM.sync();
   if(!booted||!member()){
     B.classList.remove("authed","has-bg","has-dim","liquid","focus-mode");
-    B.style.removeProperty("--fs-base");
+    B.style.removeProperty("--ui-k");
     bgEl.style.backgroundImage="";RAIN_C1="#00A8FF";RAIN_C2="#00FFFF";
     applyCursor();return;
   }
   B.classList.add("authed");
   B.classList.toggle("focus-mode",!!THEME.focusMode);
-  B.style.setProperty("--fs-base",THEME.uiScale==="sm"?"12.5px":THEME.uiScale==="lg"?"15.5px":"14px");
+  B.style.setProperty("--ui-k",THEME.uiScale==="sm"?"0.86":THEME.uiScale==="lg"?"1.18":"1");
   const isImg=THEME.bgMode==="image"&&!!THEME.img;
   const pa=Math.max(0,Math.min(100,THEME.panelAlpha??85))/100;
   const effPa=THEME.liquid?Math.min(pa,.58):pa;
@@ -3047,8 +3105,7 @@ function settingsModal(){
   <div class="st-row"><span>Âm lượng SFX (<b class="pct-ed" id="stSfxV" title="Bấm để nhập số (0–100%)">${THEME.sfxVol??60}%</b>)</span><input type="range" id="stSfxR" min="0" max="100" value="${THEME.sfxVol??60}"></div>
   <div class="st-row"><span><b>Âm nhạc nền (BGM)</b><br><small class="dim">Đang phát: <b style="color:var(--c)">${esc(THEME.bgmName||"music.mp3 (mặc định)")}</b></small></span><span style="display:flex;gap:6px"><button class="btn${THEME.bgmOn!==false?" pri":""}" id="stBgmTog" type="button">${THEME.bgmOn!==false?"♫ bật":"♫ tắt"}</button><button class="btn" id="stBgmUp" type="button">↑ tải nhạc</button>${THEME.bgmName?'<button class="btn dng" id="stBgmDef" type="button">mặc định</button>':""}<input type="file" id="stBgmIn" accept="audio/*" hidden></span></div>
   <div class="st-row"><span>Âm lượng nhạc (<b class="pct-ed" id="stBgmV" title="Bấm để nhập số (0–100%)">${THEME.bgmVol??65}%</b>)</span><input type="range" id="stBgmR" min="0" max="100" value="${THEME.bgmVol??65}"></div>
-  <div class="st-row"><span><b>Thông báo Desktop</b><br><small class="dim">Báo ở góc màn hình khi đang mở tool khác (IDA/Burp)</small></span><button class="btn${THEME.deskNotify&&deskGranted?" pri":""}" id="stDesk" type="button"${canDesk?"":" disabled"}>${!canDesk?"không hỗ trợ":THEME.deskNotify&&deskGranted?"🔔 đang bật":"🔕 đang tắt"}</button></div>
-</div>
+  <div class="st-row"><span><b>Thông báo Popup</b><br><small class="dim">Thông báo hệ thống PC/Android &amp; popup nổi trên điện thoại</small></span><button class="btn${THEME.deskNotify?" pri":""}" id="stDesk" type="button">${THEME.deskNotify?"🔔 đang bật":"🔕 đang tắt"}</button></div>
 ${member()?`<div class="st-sec">
   <div class="sec" style="margin:0">// CÀI ĐẶT NỀN, VIBE &amp; HIỂN THỊ</div>
   <div class="st-row"><span><b>Cỡ chữ giao diện</b></span><div class="scale-seg">${[["sm","Gọn"],["md","Chuẩn"],["lg","Lớn"]].map(([k,l])=>`<button type="button" data-sc="${k}" class="${(THEME.uiScale||"md")===k?"on":""}">${l}</button>`).join("")}</div></div>
@@ -3106,11 +3163,15 @@ ${isTouchPhone()?"":`<div class="st-sec" id="stCurSec">
       };
       if($("stBgmDef"))$("stBgmDef").onclick=async()=>{await BGM.resetDefault();SND.tap();toast("Đã quay về music.mp3 mặc định");mb.innerHTML=draw();bind()};
       $("stDesk").onclick=async()=>{
-        if(!canDesk)return;
-        if(THEME.deskNotify&&Notification.permission==="granted"){THEME.deskNotify=false;saveTheme();mb.innerHTML=draw();bind();return}
-        const perm=Notification.permission==="granted"?"granted":await Notification.requestPermission();
-        if(perm!=="granted"){THEME.deskNotify=false;saveTheme();return toast("⚠ Trình duyệt đã chặn quyền Thông báo",1)}
-        THEME.deskNotify=true;saveTheme();deskPush("Green Grasses · Thông báo Desktop","Đã bật thông báo khi bạn thu nhỏ cửa sổ hoặc chuyển tab.");
+        if(THEME.deskNotify){THEME.deskNotify=false;saveTheme();mb.innerHTML=draw();bind();return}
+        THEME.deskNotify=true;saveTheme();
+        if(canDesk){
+          try{
+            const perm=Notification.permission==="granted"?"granted":await Notification.requestPermission();
+            if(perm==="denied")toast("⚠ Quyền thông báo trình duyệt đang tắt — sẽ dùng Popup trong app");
+          }catch(_){}
+        }
+        await deskPush("Green Grasses · Thông báo","Đã bật! Bạn sẽ nhận được popup khi có giải mới / chat ~/notes.",null,true);
         mb.innerHTML=draw();bind();
       };
       $("stDone").onclick=closeModal;
@@ -3120,11 +3181,11 @@ ${isTouchPhone()?"":`<div class="st-sec" id="stCurSec">
       $("stFocus").onchange=e=>{THEME.focusMode=e.target.checked;saveTheme()};
       qsa("[data-vp]",mb).forEach(b=>b.onclick=()=>{
         const pr=VIBE_PRESETS[+b.dataset.vp];if(!pr)return;
+        THEME.autoVibe=false;
         THEME.color=pr.color;THEME.titleColor=pr.title;THEME.customSet=pr.custom;
         if(!pr.custom&&THEME.bgMode==="image"&&THEME.img)THEME.customSet=true;
         saveTheme();SND.tap();mb.innerHTML=draw();bind();
       });
-
       qsa('input[name="stBg"]',mb).forEach(r=>r.onchange=()=>{
         THEME.bgMode=r.value;THEME.customSet=true;saveTheme();
         $("stColBox").hidden=THEME.bgMode!=="color";
@@ -3627,14 +3688,14 @@ Store.on((doc,src,del)=>{
   if(!READY)return;
   if(doc.kind==="log"&&src==="remote"&&!del&&doc.data&&doc.data.who!==ME){
     SND.notify();if(doc.data.t==="solve")SND.solve();
-    if(document.hidden&&["solve","stuck","wu"].includes(doc.data.t)){
+    if((document.hidden||isTouchPhone())&&["solve","stuck","wu"].includes(doc.data.t)){
       const txt=String(doc.data.msg||"").replace(/<[^>]+>/g,"");
       deskPush(doc.data.t==="solve"?"⚑ PWNED!":doc.data.t==="stuck"?"⚠ Đồng đội đang BÍ":"✎ Writeup mới",txt,()=>go("board"));
     }
   }
   if(doc.kind==="note"&&src==="remote"&&!del&&member()&&doc.data&&doc.data.by!==ME&&doc.data.by!=="system"){
     SND.notify();
-    if(document.hidden){
+    if(document.hidden||(isTouchPhone()&&PAGE!=="ops")){
       const preview=doc.data.t||(doc.data.file?`📎 ${doc.data.file.name}`:"");
       deskPush(`💬 ~/notes · ${doc.data.by}`,preview,()=>go("ops"));
     }
