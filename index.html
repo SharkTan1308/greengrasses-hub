@@ -1901,7 +1901,12 @@ function renderTerm(){
       if((f.mime||"").startsWith("image/"))fhtml=`<div><img class="nimg" src="${safeF}" alt="${esc(f.name)}" data-img="${safeF}"></div><div class="nfile">🖼 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
       else fhtml=`<div class="nfile">📎 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
     }
-    return `<div class="tl"><span class="id">[${i+1}]</span><span class="ts">${fmtT.format(o.data.c)}</span><span class="ac"><button data-a="c" data-id="${i+1}" aria-label="Sao chép ${i+1}">copy</button>${canNote(o)?`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button><button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span></div>`;
+    return `<div class="tl">`+
+      `<span class="id">[${i+1}]</span>`+
+      `<span class="ts">${fmtT.format(o.data.c)}</span>`+
+      `<span class="tx"><span style="color:var(--c)">${esc(o.data.by)}</span>: ${renderNoteText(o.data.t)}${fhtml}</span>`+
+      `<span class="ac"><button data-a="c" data-id="${i+1}" aria-label="Sao chép ${i+1}">copy</button>${canNote(o)?`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button><button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span>`+
+    `</div>`;
   }).join(""):'<div class="tl sys">(chưa có thông báo nào)</div>';
   if(fb)h+=`<div class="tl fb">${fb}</div>`;
   b.innerHTML=h;b.scrollTop=end?b.scrollHeight:keep;
