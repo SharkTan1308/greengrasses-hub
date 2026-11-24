@@ -910,6 +910,160 @@ body.authed.focus-mode .g-hero,body.authed.focus-mode .g-term,body.authed.focus-
 .push-pop{pointer-events:auto;max-width:min(94vw,380px);width:100%;background:rgba(7,11,18,.95);border:1px solid var(--g);border-left:4px solid var(--g);border-radius:10px;padding:10px 12px;box-shadow:0 8px 30px rgba(0,0,0,.65),0 0 18px rgba(var(--g-rgb),.28);cursor:pointer;animation:itIn .28s ease-out both;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .push-pop b{display:block;color:var(--g);font-size:12.5px;margin-bottom:2px}
 .push-pop span{display:block;color:var(--text);font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+
+/* ===== TRANG 5: PLAYLIST (3 cột 1/3 trên PC, xếp dọc mượt trên Mobile) ===== */
+#pg-play{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:minmax(0,1fr);grid-template-areas:"plLeft plMid plRight"}
+.g-pl-left{grid-area:plLeft}.g-pl-mid{grid-area:plMid}.g-pl-right{grid-area:plRight}
+@media (max-width:1100px){
+  #pg-play{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"plLeft" "plRight" "plMid"}
+  .g-pl-left,.g-pl-right{min-height:240px;max-height:420px}
+  .pl-eq-wrap{display:none !important}
+  .pl-presets{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
+
+/* Cột trái: Danh sách playlist + menu ⋮ */
+.pl-item{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);background:var(--panel-el-a,#0b111b);border-radius:10px;padding:8px 10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.pl-item:hover,.pl-item.on{border-color:var(--g);box-shadow:0 0 14px rgba(var(--g-rgb),.18)}
+.pl-item.on{box-shadow:inset 3px 0 0 var(--g),0 0 14px rgba(var(--g-rgb),.18)}
+.pl-logo{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:#04070c;display:grid;place-items:center;color:var(--c);font-size:16px;flex:none}
+.pl-meta{min-width:0}
+.pl-meta b{display:block;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.pl-meta small{color:var(--mute);font-size:11.5px}
+.pl-dots{background:transparent;border:1px solid transparent;color:var(--mute);border-radius:6px;padding:4px 8px;font-size:15px;line-height:1}
+.pl-dots:hover{color:var(--c);border-color:var(--line);background:rgba(var(--g-rgb),.08)}
+.pl-pop{position:fixed;z-index:140;min-width:140px;background:#070b12;border:1px solid var(--g);border-radius:8px;padding:5px;box-shadow:0 10px 30px rgba(0,0,0,.7),0 0 16px rgba(var(--g-rgb),.22);display:grid;gap:3px}
+.pl-pop button{background:transparent;border:0;color:var(--text);text-align:left;padding:6px 10px;border-radius:5px;font-size:12.5px}
+.pl-pop button:hover{background:rgba(var(--g-rgb),.16);color:var(--g)}
+.pl-pop button.r:hover{background:rgba(255,0,60,.18);color:var(--red)}
+
+/* Cột phải: Title + đốm sáng bay quanh + Play tròn trắng/đen + Shuffle tròn xanh/trắng + List nhạc */
+.pl-head{display:grid;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.pl-hero{display:flex;align-items:center;gap:12px}
+.pl-hero .pl-logo{width:56px;height:56px;border-radius:10px}
+.pl-title-wrap{position:relative;flex:1;min-width:0;padding:6px 4px}
+.pl-title{position:relative;z-index:2;margin:0;font-size:clamp(18px,1.5vw,24px);font-weight:700;color:#fff;text-shadow:0 0 12px rgba(var(--g-rgb),.45);overflow-wrap:anywhere}
+.pl-sparks{position:absolute;inset:-4px;overflow:hidden;pointer-events:none;z-index:1}
+.pl-sparks i{position:absolute;left:var(--x,50%);top:var(--y,50%);width:var(--sz,4px);height:var(--sz,4px);border-radius:50%;background:var(--c);opacity:0;box-shadow:0 0 8px var(--c),0 0 14px rgba(var(--g-rgb),.6);animation:plSpark var(--d,3.2s) ease-in-out var(--dl,0s) infinite}
+@keyframes plSpark{0%,100%{transform:translate(0,0) scale(.5);opacity:0}40%{opacity:.65}65%{transform:translate(var(--dx,12px),var(--dy,-14px)) scale(1.15);opacity:.45}}
+body.lite-fx .pl-sparks{display:none}
+.pl-acts{display:flex;align-items:center;gap:12px}
+.pl-btn-play{width:44px;height:44px;border-radius:50%;border:0;background:#ffffff;color:#000000;display:grid;place-items:center;font-size:17px;font-weight:700;box-shadow:0 4px 16px rgba(255,255,255,.22);transition:transform .12s}
+.pl-btn-play:hover{transform:scale(1.06)}
+.pl-btn-shuf{width:40px;height:40px;border-radius:50%;border:2px solid transparent;background:#22c55e;color:#ffffff;display:grid;place-items:center;font-size:16px;box-shadow:0 4px 14px rgba(34,197,94,.28);transition:transform .12s,box-shadow .15s}
+.pl-btn-shuf:hover{transform:scale(1.06)}
+.pl-btn-shuf.on{border-color:#ffffff;box-shadow:0 0 18px rgba(34,197,94,.75)}
+.pl-tracks{display:grid;gap:6px}
+.pl-tr{display:grid;grid-template-columns:26px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 9px;border:1px solid rgba(var(--g-rgb),.16);border-radius:8px;background:var(--panel-el-a,#0b111b);cursor:pointer;font-size:12.5px}
+.pl-tr:hover{border-color:var(--c)}
+.pl-tr.on{border-color:var(--g);background:rgba(var(--g-rgb),.14);color:var(--g)}
+.pl-tr .pt-i{color:var(--mute);font-size:11.5px;text-align:center}
+.pl-tr.on .pt-i{color:var(--g);font-weight:700}
+.pl-tr .pt-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-tr .pt-d{color:var(--mute);font-size:11.5px;font-variant-numeric:tabular-nums}
+
+/* Cột giữa: Presets + 6-Band EQ + Seekbar trắng/vibe + Controls */
+.pl-mid-body{display:flex;flex-direction:column;gap:10px}
+.pl-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pl-pre{position:relative;display:flex;flex-direction:column;gap:2px;text-align:left;padding:7px 9px;border:1px solid rgba(var(--g-rgb),.18);border-radius:8px;background:var(--panel-el-a,#0b111b);color:var(--text);transition:border-color .15s,background .15s}
+.pl-pre:hover{border-color:var(--c)}
+.pl-pre.on{border-color:var(--g);background:rgba(var(--g-rgb),.12);box-shadow:0 0 12px rgba(var(--g-rgb),.18)}
+.pl-pre.on::after{content:"";position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g)}
+.pl-pre b{font-size:11.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:10px}
+.pl-pre.on b{color:var(--g)}
+.pl-pre small{font-size:10px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.pl-eq-wrap{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:10px 8px;border:1px solid var(--line);border-radius:10px;background:rgba(4,7,14,.55)}
+.eq-col{display:flex;flex-direction:column;align-items:center;gap:5px;user-select:none}
+.eq-db{font-size:10.5px;color:var(--c);font-variant-numeric:tabular-nums}
+.eq-sl{position:relative;width:28px;height:108px;display:flex;justify-content:center;cursor:ns-resize;touch-action:none}
+.eq-bar{position:relative;width:5px;height:100%;border-radius:3px;background:rgba(255,255,255,.16)}
+.eq-mid{position:absolute;left:-4px;right:-4px;top:50%;height:1px;background:rgba(255,255,255,.25);pointer-events:none}
+.eq-fill{position:absolute;left:0;right:0;background:var(--g);border-radius:3px;box-shadow:0 0 8px rgba(var(--g-rgb),.5)}
+.eq-knob{position:absolute;left:50%;transform:translate(-50%,50%);width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid var(--g);box-shadow:0 0 8px rgba(var(--g-rgb),.6)}
+.eq-hz{font-size:10.5px;color:var(--mute)}
+
+.pl-player{margin-top:auto;display:grid;gap:7px;padding-top:8px;border-top:1px solid var(--line)}
+.pl-now{font-size:12.5px;color:var(--c);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.pl-seek-wrap{padding:7px 0;cursor:pointer;touch-action:none}
+.pl-seek-track{position:relative;height:5px;border-radius:3px;background:#ffffff}
+.pl-seek-fill{position:relative;height:100%;width:0%;border-radius:3px;background:var(--g)}
+.pl-seek-fill::after{content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%) scale(0);width:12px;height:12px;border-radius:50%;background:var(--g);border:2px solid #fff;box-shadow:0 0 8px rgba(var(--g-rgb),.8);transition:transform .12s}
+.pl-seek-wrap:hover .pl-seek-fill::after,.pl-seek-wrap.drag .pl-seek-fill::after{transform:translateY(-50%) scale(1)}
+.pl-times{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums}
+.pl-ctrls{display:flex;align-items:center;justify-content:center;gap:18px;padding-top:2px}
+.pl-ctl{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--text);font-size:15px;display:grid;place-items:center}
+.pl-ctl:hover{border-color:var(--c);color:var(--c)}
+.pl-ctl.on{border-color:var(--g);color:var(--g);box-shadow:0 0 10px rgba(var(--g-rgb),.3)}
+.pl-viz{width:100%;height:42px;display:block;border-radius:6px;background:rgba(4,7,14,.45);border:1px solid rgba(var(--g-rgb),.14)}
+body.lite-fx .pl-viz{display:none}
+.pl-slp{position:relative;display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--amb)}
+
+/* ===== VOICE CHAT ROOM CARD TRONG ~/notes ===== */
+.vc-card{margin-top:5px;border:1px solid var(--g);border-left:3px solid var(--g);border-radius:8px;padding:8px 10px;background:rgba(var(--g-rgb),.08);display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:background .15s,box-shadow .15s}
+.vc-card:hover:not(.closed){background:rgba(var(--g-rgb),.16);box-shadow:0 0 14px rgba(var(--g-rgb),.22)}
+.vc-card.closed{border-color:rgba(255,0,60,.45);border-left-color:var(--red);background:rgba(255,0,60,.06);opacity:.78;cursor:not-allowed}
+.vc-card .vc-info{min-width:0}
+.vc-card .vc-info b{display:block;color:var(--text);font-size:13px;overflow-wrap:anywhere}
+.vc-card .vc-info small{color:var(--c);font-size:11.5px}
+.vc-card.closed .vc-info small{color:var(--red)}
+.vc-badge{flex:none;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;background:var(--g);color:var(--on-g,#020A17)}
+.vc-card.closed .vc-badge{background:var(--red);color:#fff}
+
+/* ===== VOICE CHAT OVERLAY (KIỂU DISCORD) ===== */
+#vcOverlay{position:fixed;inset:0;z-index:118;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;background:#070a10;color:var(--text)}
+#vcOverlay[hidden]{display:none}
+#vcOverlay.with-chat{grid-template-columns:minmax(0,1fr) min(360px,92vw)}
+.vc-top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:#0b111b;padding-top:max(10px,env(safe-area-inset-top,10px))}
+.vc-top-l{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--text);min-width:0}
+.vc-top-l b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vc-stage{position:relative;min-height:0;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.vc-focus-box{position:relative;flex:none;border:1px solid var(--g);border-radius:12px;background:#02040a;overflow:hidden;display:flex;flex-direction:column}
+.vc-focus-box video{width:100%;max-height:54vh;object-fit:contain;background:#000}
+.vc-focus-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#0b111b;font-size:12px;color:var(--c)}
+.vc-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px;align-content:center}
+.vc-tile{position:relative;min-height:175px;border-radius:12px;border:2px solid rgba(255,255,255,.12);background:var(--vc-bg,#0f172a);overflow:hidden;display:grid;place-items:center;transition:border-color .15s,box-shadow .15s;user-select:none}
+.vc-tile.speaking{border-color:#22c55e;box-shadow:0 0 22px rgba(34,197,94,.45)}
+.vc-tile.stream{background:#090d16;border-color:rgba(var(--g-rgb),.45);cursor:pointer}
+.vc-tile.stream:hover{border-color:var(--g);box-shadow:0 0 18px rgba(var(--g-rgb),.28)}
+.vc-tile.bot{border-color:rgba(0,255,255,.4)}
+.vc-tile video.vc-cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.vc-av-wrap{position:relative;z-index:2;display:grid;place-items:center}
+.vc-av{width:76px;height:76px;border-radius:50%;border:3px solid rgba(255,255,255,.22);object-fit:cover;background:#0b111b url(data:image/jpeg;base64,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) center/cover no-repeat}
+.vc-tile.bot .vc-av{display:grid;place-items:center;font-size:28px;color:var(--c);background:rgba(var(--g-rgb),.15);border-color:var(--c)}
+.vc-tile.speaking .vc-av{border-color:#22c55e;box-shadow:0 0 18px rgba(34,197,94,.65)}
+.vc-tag{position:absolute;left:10px;bottom:10px;z-index:3;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;background:rgba(2,4,10,.78);border:1px solid rgba(255,255,255,.12);font-size:12px;color:#fff;max-width:calc(100% - 20px)}
+.vc-tag span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vc-tile-menu{position:absolute;top:8px;right:8px;z-index:3;background:rgba(2,4,10,.72);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:2px 7px;font-size:13px}
+.vc-tile-vol{position:absolute;bottom:10px;right:10px;z-index:3;display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;background:rgba(2,4,10,.78);font-size:11px}
+.vc-tile-vol input{width:64px;accent-color:var(--c)}
+.vc-bar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line);background:#0b111b;padding-bottom:max(10px,env(safe-area-inset-bottom,10px))}
+.vc-ctrls{display:flex;align-items:center;gap:8px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+.vc-btn{height:40px;min-width:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#161e2e;color:#fff;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.vc-btn:hover{border-color:var(--c)}
+.vc-btn.off{background:#23131b;border-color:rgba(255,0,60,.45);color:#ff6b86}
+.vc-btn.on{background:rgba(var(--g-rgb),.22);border-color:var(--g);color:var(--g)}
+.vc-btn.hang{background:#dc2626;border-color:#ef4444;color:#fff;padding:0 18px}
+.vc-btn.hang:hover{background:#b91c1c}
+.vc-chat{grid-column:2;grid-row:2;display:none;flex-direction:column;min-height:0;border-left:1px solid var(--line);background:#04070c}
+#vcOverlay.with-chat .vc-chat{display:flex}
+@media (max-width:780px){
+  #vcOverlay.with-chat{grid-template-columns:minmax(0,1fr)}
+  #vcOverlay.with-chat .vc-stage{display:none}
+  #vcOverlay.with-chat .vc-chat{grid-column:1;grid-row:2}
+}
+
+/* Mini Bar khi thu nhỏ Voice (Exit / ESC) */
+#vcMini{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:116;display:flex;align-items:center;gap:10px;padding:6px 12px;border:1px solid var(--g);border-radius:999px;background:rgba(7,11,18,.94);box-shadow:0 6px 24px rgba(0,0,0,.65),0 0 16px rgba(var(--g-rgb),.3);font-size:12px;backdrop-filter:blur(8px)}
+#vcMini[hidden]{display:none}
+#vcMini b{color:var(--g);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Fix kẹt khung Stream [hidden], fix nút ngắt cuộc gọi (#modal bị #vcOverlay che) & Avatar custom */
+.vc-focus-box[hidden],#vcFocus[hidden]{display:none !important}
+#modal{z-index:132 !important}
+#toast{z-index:138 !important}
+#inAppPush{z-index:142 !important}
+.pl-pop{z-index:145 !important}
+.av,.vc-av{background-size:cover !important;background-position:center !important;background-repeat:no-repeat !important}
 </style>
 </head>
 <body class="pre">
@@ -936,6 +1090,7 @@ body.authed.focus-mode .g-hero,body.authed.focus-mode .g-term,body.authed.focus-
       <button data-go="board"><b>2</b>thử thách</button>
       <button data-go="team"><b>3</b>đội</button>
       <button data-go="profile"><b>4</b>hồ sơ</button>
+      <button data-go="playlist"><b>5</b>playlist</button>
     </nav>
     <div class="tools" id="tools" aria-label="Công cụ nhanh"></div>
     <div class="alarm" id="alarm" role="status"></div>
@@ -1080,6 +1235,47 @@ body.authed.focus-mode .g-hero,body.authed.focus-mode .g-term,body.authed.focus-
     </section>
   </main>
 
+  <!-- ===== TRANG 5: PLAYLIST & EQUALIZER ===== -->
+  <main class="page dash" id="pg-play" data-page="playlist">
+    <!-- Cột trái 1/3: Danh sách Playlists -->
+    <section class="pn g-pl-left">
+      <div class="ph"><span class="ttl">ls playlists/</span><span class="cnt" style="display:flex;align-items:center;gap:8px"><span id="plCnt">0 playlist</span><button class="mini g" id="plAddBtn" type="button" title="Tạo playlist mới">+</button></span></div>
+      <div class="pb" id="plList"></div>
+    </section>
+
+    <!-- Cột giữa 1/3: Presets + 6-Band EQ + Seekbar + Controls -->
+    <section class="pn g-pl-mid">
+      <div class="ph"><span class="ttl">alsamixer · eq &amp; player</span><span class="cnt" id="plEqLbl">Flat</span></div>
+      <div class="pb pl-mid-body">
+        <div class="pl-presets" id="plPresets"></div>
+        <div class="pl-eq-wrap" id="plEq"></div>
+        <div class="pl-player">
+          <canvas class="pl-viz" id="plViz" width="320" height="42" aria-hidden="true"></canvas>
+          <div class="pl-now" id="plNow">Chưa phát bài hát nào</div>
+          <div class="pl-seek-wrap" id="plSeekWrap">
+            <div class="pl-seek-track" id="plSeekTrack">
+              <div class="pl-seek-fill" id="plSeekFill"></div>
+            </div>
+          </div>
+          <div class="pl-times"><span id="plTimeCur">00:00</span><span class="pl-slp" id="plSlpLbl"></span><span id="plTimeDur">00:00</span></div>
+          <div class="pl-ctrls">
+            <button class="pl-ctl" id="plRepBtn" type="button" title="Chế độ lặp (Tắt / 1 bài / Cả playlist)">🔁</button>
+            <button class="pl-ctl" id="plBackBtn" type="button" title="Bài trước">⏮</button>
+            <button class="pl-btn-play" id="plMidPlay" type="button" title="Phát / Tạm dừng">▶</button>
+            <button class="pl-ctl" id="plNextBtn" type="button" title="Bài tiếp theo">⏭</button>
+            <button class="pl-ctl" id="plSlpBtn" type="button" title="Hẹn giờ tắt nhạc">⏱</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cột phải 1/3: Chi tiết Playlist đang chọn (mặc định trống) -->
+    <section class="pn g-pl-right">
+      <div class="ph"><span class="ttl">cat playlist/</span><span class="cnt" id="plRCnt"></span></div>
+      <div class="pb" id="plRight"></div>
+    </section>
+  </main>
+
   <footer class="tick" aria-label="Bản tin tình báo">
     <span class="tk-l">INTEL</span>
     <div class="tk-w"><div class="tk-t" id="tk"></div></div>
@@ -1091,6 +1287,33 @@ body.authed.focus-mode .g-hero,body.authed.focus-mode .g-term,body.authed.focus-
 <div id="modal" hidden><div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="mh"><span id="mt"></span><button id="mx" type="button" aria-label="Đóng">✕</button></div><div class="mb" id="mb"></div></div></div>
 <div id="toast" aria-live="polite"></div>
 <div id="inAppPush" aria-live="polite"></div>
+<div id="vcMini" hidden><span>🎙 <b id="vcMiniName">Voice</b></span><button class="mini g" id="vcMiniBack" type="button">mở lại</button><button class="mini" id="vcMiniMic" type="button">🔇</button><button class="mini r" id="vcMiniLeave" type="button">rời</button></div>
+<div id="vcOverlay" hidden>
+  <header class="vc-top">
+    <div class="vc-top-l"><span>🔊</span><b id="vcTitle">Voice Room</b><span class="dim" id="vcCount" style="font-weight:400;font-size:12px"></span></div>
+    <button class="ib" id="vcChatBtn" type="button" title="Mở / Đóng ~/notes">💬 ~/notes</button>
+  </header>
+  <div class="vc-stage" id="vcStage">
+    <div class="vc-focus-box" id="vcFocus" hidden>
+      <div class="vc-focus-bar"><span id="vcFocusLbl">Stream</span><button class="mini r" id="vcFocusClose" type="button">thu gọn</button></div>
+      <video id="vcFocusVid" autoplay playsinline></video>
+    </div>
+    <div class="vc-grid" id="vcGrid"></div>
+  </div>
+  <aside class="vc-chat" id="vcChatSlot"></aside>
+  <footer class="vc-bar">
+    <span class="dim" style="font-size:11.5px" id="vcRoleLbl"></span>
+    <div class="vc-ctrls">
+      <button class="vc-btn off" id="vcMicBtn" type="button" title="Bật / Tắt Mic">🔇 Mic</button>
+      <button class="vc-btn off" id="vcCamBtn" type="button" title="Bật / Tắt Camera">📷 Cam</button>
+      <button class="vc-btn" id="vcDeafBtn" type="button" title="Tắt loa phòng tạm thời (Deafen)">🎧</button>
+      <button class="vc-btn" id="vcScrBtn" type="button" title="Chia sẻ màn hình">🖥 Share</button>
+      <button class="vc-btn" id="vcMusBtn" type="button" title="Phát nhạc từ Playlist" hidden>♫ Nhạc</button>
+      <button class="vc-btn hang" id="vcHangBtn" type="button" title="Rời khỏi Voice">📞</button>
+    </div>
+    <button class="ib" id="vcExitBtn" type="button" title="Thu nhỏ không rời voice (ESC)">Exit ↘</button>
+  </footer>
+</div>
 <div id="crt" aria-hidden="true"><i class="grain"></i><i class="scl"></i><i class="vig"></i><i class="flk"></i></div>
 <div id="bsc" aria-hidden="true"></div>
 
@@ -1309,7 +1532,15 @@ const SND=(()=>{
     alarm(){for(let i=0;i<4;i++){tone(560,.38,'sawtooth',.2,980,i*.48,.25,true);tone(70,.3,'sine',.4,40,i*.48)}duck(.25,1.5)},
     deny(){tone(140,.22,'square',.28,110,0,.15,true);tone(140,.28,'square',.28,90,.26,.15,true)},
     ok(){tone(880,.07,'triangle',.16,0,0,.3);tone(1320,.1,'triangle',.13,0,.07,.4)},
-    solve(){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,.22,'square',.09,0,i*.08,.5));tone(60,.6,'sine',.4,30,0,.2,true)}
+    solve(){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,.22,'square',.09,0,i*.08,.5));tone(60,.6,'sine',.4,30,0,.2,true)},
+    vcJoin(){tone(523.25,.12,'triangle',.18,0,0,.35);tone(783.99,.18,'triangle',.16,0,.09,.45)},
+    vcLeave(){tone(392,.12,'triangle',.16,0,0,.3);tone(261.63,.2,'triangle',.14,0,.09,.4)},
+    vcPeerJoin(){tone(659.25,.1,'sine',.12,0,0,.3);tone(880,.14,'sine',.1,0,.07,.35)},
+    vcPeerLeave(){tone(440,.1,'sine',.11,0,0,.25);tone(293.66,.15,'sine',.09,0,.07,.3)},
+    vcStream(){tone(587.33,.08,'triangle',.13,0,0,.3);tone(739.99,.08,'triangle',.13,0,.07,.3);tone(880,.15,'triangle',.12,0,.14,.4)},
+    vcMic(on){if(on)tone(520,.06,'triangle',.14,880);else tone(680,.06,'triangle',.12,360)},
+    vcCam(on){if(on){tone(440,.05,'sine',.12,960);noise(.02,.12,'highpass',4000)}else tone(640,.06,'sine',.1,280)},
+    vcDeafen(on){if(on){tone(580,.06,'square',.06,300);tone(320,.1,'triangle',.11,220)}else{tone(320,.06,'triangle',.11,520);tone(620,.09,'triangle',.11,780)}}
   };
 })();
 
@@ -1318,7 +1549,7 @@ const SND=(()=>{
 // =====================================================================
 const Store=(()=>{
   const docs=new Map(),subs=new Set(),TAB=rid(),peers=new Map(),LK="gg_hub_v2";
-  let mode="local",sb=null,ch=null,bc=null,me=null,focus=null,sbStates=[];
+  let mode="local",sb=null,ch=null,bc=null,me=null,focus=null,vcRoom=null,sbStates=[];
   const emit=(doc,src,del)=>subs.forEach(f=>{try{f(doc,src,del)}catch(e){console.error(e)}});
   const saveLocal=()=>LS.set(LK,[...docs.values()]);
   function apply(doc,del,src){
@@ -1338,7 +1569,7 @@ const Store=(()=>{
         ch=sb.channel("hub-rt",{config:{presence:{key:TAB}}})
           .on("postgres_changes",{event:"*",schema:"public",table:CFG.TABLE},pl=>{pl.eventType==="DELETE"?apply(pl.old,true,"remote"):apply(pl.new,false,"remote")})
           .on("presence",{event:"sync"},()=>{const st=ch.presenceState();sbStates=Object.values(st).flat().filter(x=>x&&x.n);emit({id:"~presence",kind:"presence"},"remote")})
-          .subscribe(s=>{if(s==="SUBSCRIBED"&&me)ch.track({n:me,ch:focus})});
+          .subscribe(s=>{if(s==="SUBSCRIBED"&&me)ch.track({n:me,ch:focus,vc:vcRoom})});
         mode="supabase";return mode;
       }catch(e){console.warn("Supabase lỗi, chuyển sang local:",e);toast("⚠ Không kết nối được Supabase — dùng chế độ local",1)}
     }
@@ -1348,13 +1579,13 @@ const Store=(()=>{
       bc.onmessage=e=>{const m=e.data||{};
         if(m.t==="put")apply(m.doc,false,"remote");
         else if(m.t==="del")apply({id:m.id},true,"remote");
-        else if(m.t==="hb"){const prev=peers.get(m.tab);peers.set(m.tab,{n:m.n,ch:m.ch||null,at:Date.now()});if(!prev||prev.ch!==(m.ch||null)||prev.n!==m.n){emit({id:"~presence",kind:"presence"},"remote");if(!prev)hb()}}
+        else if(m.t==="hb"){const prev=peers.get(m.tab);peers.set(m.tab,{n:m.n,ch:m.ch||null,vc:m.vc||null,at:Date.now()});if(!prev||prev.ch!==(m.ch||null)||prev.vc!==(m.vc||null)||prev.n!==m.n){emit({id:"~presence",kind:"presence"},"remote");if(!prev)hb()}}
         else if(m.t==="bye"){peers.delete(m.tab);emit({id:"~presence",kind:"presence"},"remote")}};
       setInterval(hb,8000);addEventListener("pagehide",()=>bc&&bc.postMessage({t:"bye",tab:TAB}));
     }else addEventListener("storage",e=>{if(e.key===LK){LS.get(LK,[]).forEach(d=>apply(d,false,"remote"))}});
     return mode;
   }
-  function hb(){if(bc&&me)bc.postMessage({t:"hb",tab:TAB,n:me,ch:focus})}
+  function hb(){if(bc&&me)bc.postMessage({t:"hb",tab:TAB,n:me,ch:focus,vc:vcRoom})}
   function put(doc){
     doc.ts=Date.now();docs.set(doc.id,doc);emit(doc,"self",false);
     if(mode==="supabase")sb.from(CFG.TABLE).upsert({id:doc.id,kind:doc.kind,data:doc.data,ts:doc.ts}).then(r=>{if(r.error)toast("⚠ Ghi Supabase lỗi: "+r.error.message,1)});
@@ -1385,7 +1616,7 @@ const Store=(()=>{
   }
   const all=kind=>{const o=[];docs.forEach(d=>{if(d.kind===kind)o.push(d)});return o};
   function states(){
-    const arr=[];if(me)arr.push({n:me,ch:focus});
+    const arr=[];if(me)arr.push({n:me,ch:focus,vc:vcRoom});
     if(mode==="supabase")sbStates.forEach(x=>arr.push(x));
     else{const t=Date.now();peers.forEach(v=>{if(t-v.at<20000)arr.push(v)})}
     return arr;
@@ -1401,10 +1632,10 @@ const Store=(()=>{
     catch(e){return false}
   }
   function setLocal(doc){docs.set(doc.id,doc);emit(doc,"self",false);if(mode!=="supabase")saveLocal()}
-  async function uploadFile(file){
+  async function uploadFile(file,dir="notes"){
     if(mode==="supabase"&&sb){
       const safeName=String(file.name||"file").replace(/[^\w.\-]+/g,"_").slice(-60);
-      const path=`notes/${Date.now()}_${rid()}_${safeName}`;
+      const path=`${dir}/${Date.now()}_${rid()}_${safeName}`;
       const {error}=await sb.storage.from("hub-files").upload(path,file,{contentType:file.type||"application/octet-stream"});
       if(error)throw error;
       const {data}=sb.storage.from("hub-files").getPublicUrl(path);
@@ -1419,9 +1650,11 @@ const Store=(()=>{
   }
   return{
     init,put,putAsync,del,delMany,setLocal,all,get:id=>docs.get(id),on:f=>subs.add(f),mode:()=>mode,verifyRecovery,updateRootPw,uploadFile,removeFile,
-    track(n,chId){me=n;if(chId!==undefined)focus=chId||null;if(mode==="supabase"&&ch)ch.track({n:me,ch:focus}).catch(()=>{});else{hb();emit({id:"~presence",kind:"presence"},"self")}},
+    client:()=>sb,tabId:()=>TAB,
+    track(n,chId,vcId){me=n;if(chId!==undefined)focus=chId||null;if(vcId!==undefined)vcRoom=vcId||null;if(mode==="supabase"&&ch)ch.track({n:me,ch:focus,vc:vcRoom}).catch(()=>{});else{hb();emit({id:"~presence",kind:"presence"},"self")}},
     online(){return new Set(states().map(x=>x.n).filter(Boolean))},
-    focusOn(id){return[...new Set(states().filter(x=>x.ch===id&&x.n).map(x=>x.n))]}
+    focusOn(id){return[...new Set(states().filter(x=>x.ch===id&&x.n).map(x=>x.n))]},
+    voicePeers(vcId){return[...new Set(states().filter(x=>x.vc===vcId&&x.n).map(x=>x.n))]}
   };
 })();
 
@@ -1438,6 +1671,7 @@ const isRootUser=u=>!!(u&&(u.root===true||u.accId==="#5H4RK"||CFG.LEADER.include
 const member=()=>!!ME&&!GUEST;
 const canEditUser=n=>member()&&(n===ME||isLeader());
 const rolesHTML=r=>(r&&r.length?r:[]).slice().sort((a,b)=>ROLES.indexOf(a)-ROLES.indexOf(b)).map(x=>`<span class="role ${x}" style="--rc:${RC[x]||"#94A3B8"}">${x==="leader"?"★ ":""}${esc(x)}</span>`).join(" ")||'<span class="dim" style="font-size:11px">chưa chọn vai trò</span>';
+const avStyle=u=>u&&u.av?` style="background-image:url(${esc(safeUrl(u.av))})"`:"" ;
 const NET_IP={v4:"",v6:""};
 async function fetchNetInfo(ms=2500){
   const grabText=async(u,re)=>{
@@ -1682,7 +1916,7 @@ function heatState(u){const a7=sumAct(u,7),a30=sumAct(u,30);return a7>=8?["fire"
 // =====================================================================
 let PAGE="ops",PROF=null,READY=false,rq=0;
 function go(pg,arg){
-  if(!["ops","board","team","profile"].includes(pg))pg="ops";
+  if(!["ops","board","team","profile","playlist"].includes(pg))pg="ops";
   PAGE=pg;if(pg==="profile")PROF=arg||PROF||(member()?ME:(users()[0]||{}).name);
   qsa(".page").forEach(e=>e.classList.toggle("on",e.dataset.page===pg));
   qsa("#nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.go===pg?"page":"false"));
@@ -1698,6 +1932,7 @@ function renderNow(){
   else if(PAGE==="board")renderBoard();
   else if(PAGE==="team")renderTeam();
   else if(PAGE==="profile")renderProfile();
+  else if(PAGE==="playlist")renderPlaylist();
 }
 function renderBar(){
   const on=Store.online();
@@ -1894,18 +2129,27 @@ function renderTerm(){
   $("tp").textContent=editing?"edit["+editing+"]>":ME+"@gg:~/notes$";$("tbarN").textContent=ME+"@gg: ~/notes";
   let h=`<div class="tl sys">Green Grasses notes · ${Store.mode()==="supabase"?"đồng bộ realtime cả team":"lưu trên trình duyệt này (local)"} · gõ <b>help</b></div>`;
   h+=ns.length?ns.map((o,i)=>{
-    const f=o.data.file;
+    const f=o.data.file,vc=o.data.voice;
     let fhtml="";
     if(f&&f.url){
       const safeF=esc(safeUrl(f.url));
       if((f.mime||"").startsWith("image/"))fhtml=`<div><img class="nimg" src="${safeF}" alt="${esc(f.name)}" data-img="${safeF}"></div><div class="nfile">🖼 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
       else fhtml=`<div class="nfile">📎 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
     }
+    let vhtml="";
+    if(vc){
+      const expired=vc.emptyAt&&Date.now()-vc.emptyAt>=30000;
+      const closed=vc.status==="closed"||expired;
+      const curCnt=Store.voicePeers(vc.id).length;
+      const maxLbl=vc.max>0?vc.max:"∞";
+      const inThis=typeof Voice!=="undefined"&&Voice.roomNoteId()===o.id;
+      vhtml=`<div class="vc-card${closed?" closed":""}" data-vc-join="${esc(o.id)}"><div class="vc-info"><b>🎙 ${esc(vc.name)}</b><small>${closed?"Phòng đã đóng":`${curCnt} / ${maxLbl} thành viên`}</small></div><span class="vc-badge">${closed?"CLOSED":inThis?"Đang ở trong":"Tham gia"}</span></div>`;
+    }
     return `<div class="tl">`+
       `<span class="id">[${i+1}]</span>`+
       `<span class="ts">${fmtT.format(o.data.c)}</span>`+
-      `<span class="tx"><span style="color:var(--c)">${esc(o.data.by)}</span>: ${renderNoteText(o.data.t)}${fhtml}</span>`+
-      `<span class="ac"><button data-a="c" data-id="${i+1}" aria-label="Sao chép ${i+1}">copy</button>${canNote(o)?`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button><button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span>`+
+      `<span class="tx"><span style="color:var(--c)">${esc(o.data.by)}</span>: ${vc?`tạo phòng voice`:renderNoteText(o.data.t)}${fhtml}${vhtml}</span>`+
+      `<span class="ac"><button data-a="c" data-id="${i+1}" aria-label="Sao chép ${i+1}">copy</button>${canNote(o)?`${vc?"":`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button>`}<button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span>`+
     `</div>`;
   }).join(""):'<div class="tl sys">(chưa có thông báo nào)</div>';
   if(fb)h+=`<div class="tl fb">${fb}</div>`;
@@ -1941,7 +2185,7 @@ function run(v){
   if(!v)return;
   const m=v.match(/^(\S+)\s*([\s\S]*)$/),c=m[1].toLowerCase(),a=m[2].trim();
   switch(c){
-    case"help":return say("add <nội dung> · edit <số> [nội dung mới] · rm <số|all> · clear · whoami · online · goto <ops|board|team|profile> · nút + để đính kèm file · hoặc gõ thẳng nội dung");
+    case"help":return say("add <nội dung> · edit <số> [nội dung mới] · rm <số|all> · clear · whoami · online · goto <ops|board|team|profile|playlist> · nút + để gửi file / tạo voice");
     case"ls":return say(notes().length+" thông báo");
     case"clear":return say("");
     case"whoami":return say(member()?`${ME} (${U(ME).accId||"—"}) · ${(U(ME).roles||[]).join(", ")||"chưa có vai trò"}`:"guest (chỉ xem)");
@@ -1962,6 +2206,37 @@ function attachNoteFile(f){
   pendingFile=f;pendingUrl=f.type&&f.type.startsWith("image/")?URL.createObjectURL(f):null;
   renderPrev();$("ti")?.focus();SND.tap();
 }
+function openVoiceCreateModal(){
+  if(!member())return;
+  modal("tạo phòng voice chat",`<form class="fm" id="vcf">
+<label>Tên phòng<input name="name" required maxlength="40" value="Voice ${esc(ME)}" placeholder="vd: Voice Cỏ xanh"></label>
+<div class="st-sec">
+  <div class="st-row"><span><b>Số lượng thành viên tối đa</b><br><small class="dim">Không tính Stream &amp; Bot nhạc</small></span><label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--text)"><input type="checkbox" id="vcUnlim" checked style="accent-color:var(--g)"> Unlimited (∞)</label></div>
+  <div class="st-row"><input type="range" id="vcMaxR" min="1" max="50" value="6" disabled><input type="number" id="vcMaxN" min="1" max="99" value="6" style="width:68px;text-align:center" disabled></div>
+</div>
+<div class="acts"><button class="btn" type="button" id="vcCl">hủy</button><button class="btn pri" type="submit">🎙 tạo phòng</button></div>
+</form>`,()=>{
+    const un=$("vcUnlim"),rg=$("vcMaxR"),nm=$("vcMaxN");
+    un.onchange=()=>{rg.disabled=nm.disabled=un.checked};
+    rg.oninput=()=>{nm.value=rg.value};
+    nm.oninput=()=>{const v=Math.max(1,Math.min(99,Math.round(+nm.value||1)));rg.value=Math.min(50,v)};
+    $("vcCl").onclick=closeModal;
+    $("vcf").onsubmit=async e=>{
+      e.preventDefault();
+      const name=String(new FormData(e.target).get("name")).trim()||"Voice Room";
+      const max=un.checked?0:Math.max(1,Math.min(99,Math.round(+nm.value||1)));
+      const id="n:"+rid(),vcId="vc_"+rid();
+      const doc={id,kind:"note",data:{t:"",by:ME,c:Date.now(),voice:{id:vcId,name,max,by:ME,status:"open",emptyAt:null,dj:[],banned:[]}}};
+      await Store.putAsync(doc);
+      act("note",`<b>${esc(ME)}</b> mở phòng voice <b>${esc(name)}</b>`);
+      closeModal();
+      Voice.join(id);
+    };
+  });
+}
+let plusPop=null;
+function closePlusPop(){if(plusPop){plusPop.remove();plusPop=null}}
+document.addEventListener("pointerdown",e=>{if(plusPop&&!plusPop.contains(e.target)&&e.target.id!=="tPlus")closePlusPop()});
 function initTerm(){
   const ti=$("ti"),tf=$("tFile"),exp=$("tExp"),termEl=$("term");
   const sendNow=()=>{const v=ti.value;if(editing==null)ti.value="";run(v)};
@@ -1971,16 +2246,26 @@ function initTerm(){
     e.stopPropagation();
   });
   $("tSend").onclick=sendNow;
-  $("tPlus").onclick=()=>{if(!member())return;tf.click()};
+  $("tPlus").onclick=e=>{
+    e.stopPropagation();if(!member())return;
+    if(plusPop){closePlusPop();return}
+    const r=$("tPlus").getBoundingClientRect();
+    plusPop=document.createElement("div");plusPop.className="pl-pop";
+    plusPop.innerHTML=`<button type="button" data-tp="file">📎 Upload file</button><button type="button" data-tp="voice">🎙 Tạo phòng voice</button>`;
+    document.body.appendChild(plusPop);
+    plusPop.style.top=Math.max(8,r.top-plusPop.offsetHeight-6)+"px";
+    plusPop.style.left=Math.min(innerWidth-plusPop.offsetWidth-8,Math.max(8,r.left))+"px";
+    plusPop.onclick=ev=>{
+      const a=ev.target.dataset.tp;if(!a)return;closePlusPop();
+      if(a==="file")tf.click();else openVoiceCreateModal();
+    };
+  };
   tf.onchange=()=>{const f=tf.files&&tf.files[0];if(f)attachNoteFile(f)};
-  // Paste (Ctrl+V / Dán trên điện thoại) bất kỳ file hoặc ảnh nào vào ~/notes
   termEl.addEventListener("paste",e=>{
     if(!member())return;
     const cd=e.clipboardData;if(!cd)return;
     let file=cd.files&&cd.files[0];
-    if(!file&&cd.items){
-      for(const it of cd.items){if(it.kind==="file"){file=it.getAsFile();if(file)break}}
-    }
+    if(!file&&cd.items){for(const it of cd.items){if(it.kind==="file"){file=it.getAsFile();if(file)break}}}
     if(file){
       e.preventDefault();
       if(!file.name||file.name==="image.png"){
@@ -1997,15 +2282,35 @@ function initTerm(){
     mapSig="";if(PAGE==="ops")renderMap();
   };
   $("tb").addEventListener("click",e=>{
+    const vcCard=e.target.closest("[data-vc-join]");
+    if(vcCard){Voice.join(vcCard.dataset.vcJoin);return}
     const img=e.target.closest("img.nimg");
     if(img){return modal("xem ảnh",`<div style="text-align:center"><img src="${img.src}" style="max-width:100%;max-height:70vh;border-radius:8px;border:1px solid var(--line)"></div>`)}
     const b=e.target.closest("button[data-a]");
     if(b){
       const i=+b.dataset.id,a=b.dataset.a;
-      if(a==="c"){const o=noteAt(i);if(o)copyStr([o.data.t,o.data.file?.url].filter(Boolean).join("\n"),"Đã sao chép");return}
+      if(a==="c"){const o=noteAt(i);if(o)copyStr(o.data.voice?o.data.voice.name:[o.data.t,o.data.file?.url].filter(Boolean).join("\n"),"Đã sao chép");return}
       return a==="d"?delNote(i):startEdit(i);
     }
     if(!e.target.closest("a")&&!getSelection().toString())ti.focus();
+  });
+}
+
+// Tự động đóng các phòng voice đã trống quá 30 giây
+function sweepVoiceRooms(){
+  if(!READY||!member())return;
+  const now=Date.now(),onlineSorted=[...Store.online()].sort();
+  Store.all("note").forEach(d=>{
+    const vc=d.data&&d.data.voice;
+    if(!vc||vc.status==="closed")return;
+    const cnt=Store.voicePeers(vc.id).length;
+    if(cnt>0){
+      if(vc.emptyAt!=null&&(vc.by===ME||onlineSorted[0]===ME)){vc.emptyAt=null;Store.put(d)}
+    }else{
+      const responsible=(vc.by===ME||(onlineSorted[0]===ME&&!Store.online().has(vc.by)));
+      if(!vc.emptyAt){if(responsible){vc.emptyAt=now;Store.put(d)}}
+      else if(now-vc.emptyAt>=30000){if(responsible){vc.status="closed";Store.put(d)}}
+    }
   });
 }
 
@@ -2158,7 +2463,7 @@ function renderTeam(){
   const us=users(),on=Store.online(),ranked=us.map(u=>({u,s:stats(u.name)})).sort((a,b)=>b.s.pts-a.s.pts||a.u.name.localeCompare(b.u.name));
   $("mcnt").textContent=us.length+" thành viên · "+on.size+" online";
   $("roster").innerHTML=ranked.map((o,i)=>{const top=(o.u.skills||[]).slice().sort((a,b)=>b.lv-a.lv).slice(0,3).map(s=>esc(s.k)).join(" · ");
-    return`<button class="rc" data-p="${esc(o.u.name)}" type="button"><span class="rk">#${i+1}</span><span class="av" role="img" aria-label="Avatar ${esc(o.u.name)}"></span><span class="ri"><span class="rn"><span class="dot${on.has(o.u.name)?" on":""}"></span>${esc(o.u.name)}</span><span class="rr">${rolesHTML(o.u.roles)}</span><span class="rs"><b>${o.s.pts}</b> điểm · ${o.s.evs.size} giải · ${o.s.nS} solve${top?" · "+top:""}</span></span></button>`}).join("");
+    return`<button class="rc" data-p="${esc(o.u.name)}" type="button"><span class="rk">#${i+1}</span><span class="av"${avStyle(o.u)} role="img" aria-label="Avatar ${esc(o.u.name)}"></span><span class="ri"><span class="rn"><span class="dot${on.has(o.u.name)?" on":""}"></span>${esc(o.u.name)}</span><span class="rr">${rolesHTML(o.u.roles)}</span><span class="rs"><b>${o.s.pts}</b> điểm · ${o.s.evs.size} giải · ${o.s.nS} solve${top?" · "+top:""}</span></span></button>`}).join("");
   $("roster").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>go("profile",b.dataset.p));
   $("rosterF").innerHTML=isLeader()?`<button class="btn" id="admBtn" type="button">⚙ quản trị team</button>`:`<span class="dim" style="font-size:11.5px">bấm vào thành viên để xem hồ sơ</span>`;
   if($("admBtn"))$("admBtn").onclick=adminModal;
@@ -2225,14 +2530,15 @@ function renderProfile(){
   $("psel").onchange=()=>go("profile",$("psel").value);
   const s=stats(u.name),on=Store.online().has(u.name),ed=canEditUser(u.name),self=member()&&u.name===ME;
   const rootLock=isRootUser(u);
-  $("pcard").innerHTML=`<div class="pc"><span class="av bav" role="img" aria-label="Avatar ${esc(u.name)}"></span><h2>${esc(u.name)}</h2>
+  $("pcard").innerHTML=`<div class="pc"><span class="av bav"${avStyle(u)} role="img" aria-label="Avatar ${esc(u.name)}"></span><h2>${esc(u.name)}</h2>
 <div class="uid-sub" id="pAccId" title="Bấm để sao chép UserID">(${esc(u.accId||"—")})</div>
 <div class="ps"><span class="dot${on?" on":""}"></span> ${on?"đang online":u.seen?"hoạt động "+ago(u.seen):"chưa đăng nhập"}${u.h?"":" · <span style='color:var(--amb)'>chưa kích hoạt</span>"}</div>
 <div class="rr">${rolesHTML(u.roles)}</div>
 ${u.ctf?`<a href="https://ctftime.org/user/${+u.ctf}" target="_blank" rel="noopener" style="font-size:12px">CTFtime #${+u.ctf} ↗</a>`:""}
 <div class="bio">${u.bio?esc(u.bio):'<span class="dim">// chưa có giới thiệu</span>'}</div>
-<div class="pbtn">${ed?`<button class="btn" id="pRole" type="button">vai trò</button><button class="btn" id="pBio" type="button">giới thiệu</button><button class="btn" id="pRen" type="button">đổi username</button>`:""}${self?`<button class="btn" id="pPw" type="button">đổi mật khẩu</button>`:""}${member()&&isLeader()&&!rootLock?`<button class="btn dng" id="pDel" type="button">xóa tài khoản</button>`:""}</div></div>`;
+<div class="pbtn">${ed?`<button class="btn" id="pAv" type="button">đổi avatar</button><button class="btn" id="pRole" type="button">vai trò</button><button class="btn" id="pBio" type="button">giới thiệu</button><button class="btn" id="pRen" type="button">đổi username</button>`:""}${self?`<button class="btn" id="pPw" type="button">đổi mật khẩu</button>`:""}${member()&&isLeader()&&!rootLock?`<button class="btn dng" id="pDel" type="button">xóa tài khoản</button>`:""}</div></div>`;
   if($("pAccId"))$("pAccId").onclick=()=>u.accId&&copyStr(u.accId,"Đã sao chép UserID: "+u.accId);
+  if($("pAv"))$("pAv").onclick=()=>avModal(u.name);
   if($("pRole"))$("pRole").onclick=()=>roleModal(u.name);
   if($("pBio"))$("pBio").onclick=()=>bioModal(u.name);
   if($("pRen"))$("pRen").onclick=()=>renameModal(u.name);
@@ -2273,6 +2579,294 @@ function renderAvail(u,ed){
   $("avSave").onclick=()=>{const x=U(u.name);x.avail=b.join("");putUser(x);AV.dirty=false;act("avail",`<b>${esc(ME)}</b> cập nhật lịch rảnh${u.name!==ME?" của "+esc(u.name):""} (${b.filter(v=>v==="1").length} giờ/tuần)`);SND.ok();toast("Đã lưu lịch rảnh")};
   $("avUndo").onclick=()=>{AV=null;renderAvail(U(u.name),ed)};
   qsa("[data-pre]",$("pavailF")).forEach(x=>x.onclick=()=>{const k=x.dataset.pre;for(let i=0;i<168;i++){const d=Math.floor(i/24),h=i%24;if(k==="clr")b[i]="0";else if(k==="eve"&&h>=19)b[i]="1";else if(k==="wk"&&d>=5&&h>=8)b[i]="1"}AV.dirty=true;renderAvail(u,ed)});
+}
+
+// =====================================================================
+//  TRANG 5: PLAYLIST, UPLOAD FOLDER NHẠC, LOGO 1:1, 6-BAND EQUALIZER
+// =====================================================================
+let SEL_PL=null,plPop=null;
+const fmtMMSS=s=>{if(!isFinite(s)||s<=0)return"00:00";s=Math.floor(s);return p(Math.floor(s/60))+":"+p(s%60)};
+const isAudioFile=f=>(f.type||"").startsWith("audio/")||/\.(mp3|wav|ogg|flac|aac|m4a|opus|webm|wma|aiff|m4b)$/i.test(f.name);
+const readAudioDur=file=>new Promise(res=>{
+  const u=URL.createObjectURL(file),a=new Audio();a.preload="metadata";a.src=u;
+  a.onloadedmetadata=()=>{const d=isFinite(a.duration)?a.duration:0;URL.revokeObjectURL(u);res(d)};
+  a.onerror=()=>{URL.revokeObjectURL(u);res(0)};
+});
+function cropSquareLogo(file){
+  return new Promise((res,rej)=>{
+    const u=URL.createObjectURL(file),im=new Image();
+    im.onload=()=>{
+      URL.revokeObjectURL(u);
+      const s=Math.min(im.width,im.height),sx=(im.width-s)/2,sy=(im.height-s)/2;
+      const c=document.createElement("canvas");c.width=c.height=256;
+      c.getContext("2d").drawImage(im,sx,sy,s,s,0,0,256,256);
+      res(c.toDataURL("image/jpeg",.86));
+    };
+    im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Không đọc được ảnh"))};
+    im.src=u;
+  });
+}
+async function savePlaylists(){await GGDB.set("playlists_v1",PLAYLISTS)}
+function closePlPop(){if(plPop){plPop.remove();plPop=null}}
+document.addEventListener("pointerdown",e=>{if(plPop&&!plPop.contains(e.target)&&!e.target.closest(".pl-dots"))closePlPop()});
+
+async function uploadToPlaylist(plId,fileList){
+  const pl=PLAYLISTS.find(p=>p.id===plId);if(!pl)return;
+  const files=[...fileList].filter(isAudioFile);
+  if(!files.length)return toast("Không tìm thấy file âm thanh hợp lệ nào",1);
+  toast(`Đang nạp ${files.length} file âm thanh…`);
+  let added=0;
+  for(const f of files){
+    if(f.size>500*1024*1024)continue;
+    const dur=await readAudioDur(f);
+    const id="tr_"+rid();
+    await GGDB.set("pl_tr_"+id,f);
+    pl.tracks.push({id,name:f.name.replace(/\.[^.]+$/,""),dur,size:f.size});
+    added++;
+  }
+  await savePlaylists();
+  SND.ok();toast(`✔ Đã thêm ${added} bài hát vào "${pl.name}"`);
+  renderPlaylist();
+}
+function openPlUploadModal(plId){
+  const pl=PLAYLISTS.find(p=>p.id===plId);if(!pl)return;
+  modal("upload nhạc · "+pl.name,`<div class="fm">
+<div class="dim" style="font-size:12px">Chọn 1 hoặc nhiều file âm thanh, hoặc chọn cả thư mục (hệ thống tự lọc riêng file nhạc và bỏ qua các file khác).</div>
+<div class="acts" style="justify-content:center;gap:12px;padding:12px 0">
+  <button class="btn pri" id="upFBtn" type="button">📄 Chọn 1 / nhiều file nhạc</button>
+  <button class="btn" id="upDBtn" type="button">📁 Chọn cả thư mục</button>
+  <input type="file" id="upFIn" accept="audio/*" multiple hidden>
+  <input type="file" id="upDIn" webkitdirectory directory multiple hidden>
+</div></div>`,()=>{
+    $("upFBtn").onclick=()=>$("upFIn").click();
+    $("upDBtn").onclick=()=>$("upDIn").click();
+    $("upFIn").onchange=async e=>{const fl=e.target.files;if(!fl||!fl.length)return;closeModal();await uploadToPlaylist(plId,fl)};
+    $("upDIn").onchange=async e=>{const fl=e.target.files;if(!fl||!fl.length)return;closeModal();await uploadToPlaylist(plId,fl)};
+  });
+}
+function configPlaylistModal(plId){
+  const pl=PLAYLISTS.find(p=>p.id===plId);if(!pl)return;
+  let newLogo=pl.logo||"";
+  modal("cấu hình playlist · "+pl.name,`<form class="fm" id="plCfgF">
+<label>Tên Playlist<input name="name" required maxlength="40" value="${esc(pl.name)}"></label>
+<div class="st-row">
+  <span style="display:flex;align-items:center;gap:10px">
+    <span class="pl-logo" id="plCfgPrev">${newLogo?`<img src="${newLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:7px">`:"♫"}</span>
+    <span>Logo Playlist (tự cắt tỉ lệ 1:1)</span>
+  </span>
+  <span style="display:flex;gap:6px"><button class="btn" id="plCfgUp" type="button">↑ tải ảnh</button>${newLogo?'<button class="btn dng" id="plCfgClr" type="button">xóa ảnh</button>':""}<input type="file" id="plCfgIn" accept="image/*" hidden></span>
+</div>
+<div class="acts"><button class="btn" id="plCfgCl" type="button">hủy</button><button class="btn pri" type="submit">lưu</button></div>
+</form>`,()=>{
+    $("plCfgCl").onclick=closeModal;
+    $("plCfgUp").onclick=()=>$("plCfgIn").click();
+    if($("plCfgClr"))$("plCfgClr").onclick=()=>{newLogo="";$("plCfgPrev").innerHTML="♫"};
+    $("plCfgIn").onchange=async e=>{
+      const f=e.target.files&&e.target.files[0];if(!f)return;
+      try{newLogo=await cropSquareLogo(f);$("plCfgPrev").innerHTML=`<img src="${newLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:7px">`}
+      catch(err){toast("⚠ "+(err.message||"Không đọc được ảnh"),1)}
+    };
+    $("plCfgF").onsubmit=async e=>{
+      e.preventDefault();
+      pl.name=String(new FormData(e.target).get("name")).trim()||"Untitled";
+      pl.logo=newLogo;
+      await savePlaylists();closeModal();SND.ok();renderPlaylist();
+    };
+  });
+}
+async function deletePlaylist(plId){
+  const idx=PLAYLISTS.findIndex(p=>p.id===plId);if(idx<0)return;
+  const pl=PLAYLISTS[idx];
+  for(const tr of pl.tracks)await GGDB.del("pl_tr_"+tr.id);
+  PLAYLISTS.splice(idx,1);
+  if(SEL_PL===plId)SEL_PL=null;
+  await savePlaylists();SND.tap();toast(`Đã xóa playlist "${pl.name}"`);
+  renderPlaylist();
+}
+
+let vizRaf=0;
+function drawViz(){
+  vizRaf=0;
+  const cv=$("plViz"),st=BGM.state();
+  if(!cv||PAGE!=="playlist"||THEME.lite||!st.playing){
+    if(cv){const x=cv.getContext("2d");x.clearRect(0,0,cv.width,cv.height)}
+    return;
+  }
+  const x=cv.getContext("2d"),W=cv.width,H=cv.height,arr=new Uint8Array(32);
+  const ok=BGM.getFreq(arr);
+  x.clearRect(0,0,W,H);
+  const n=24,gap=3,bw=(W-(n-1)*gap)/n;
+  for(let i=0;i<n;i++){
+    const v=ok?arr[i]/255:(0.22+0.5*Math.abs(Math.sin(Date.now()/220+i*.55)));
+    const bh=Math.max(3,v*(H-4));
+    x.fillStyle=i%3===0?RAIN_C2:RAIN_C1;
+    x.globalAlpha=.45+v*.55;
+    x.fillRect(i*(bw+gap),H-bh,bw,bh);
+  }
+  x.globalAlpha=1;
+  vizRaf=requestAnimationFrame(drawViz);
+}
+
+function syncPlayerUI(){
+  const st=BGM.state(),pl=PLAYLISTS.find(p=>p.id===st.plId);
+  const tr=pl&&pl.tracks.find(t=>t.id===st.trId);
+  if($("plNow"))$("plNow").textContent=tr?`${pl.name} · ${tr.name}`:(THEME.bgmOn!==false&&!st.plId?"Đang dùng music.mp3 mặc định":"Chưa phát bài hát nào");
+  if($("plTimeCur"))$("plTimeCur").textContent=fmtMMSS(st.cur);
+  if($("plTimeDur"))$("plTimeDur").textContent=fmtMMSS(st.dur);
+  if($("plSeekFill"))$("plSeekFill").style.width=(st.dur>0?Math.min(100,st.cur/st.dur*100):0)+"%";
+  if($("plMidPlay"))$("plMidPlay").textContent=st.playing?"⏸":"▶";
+  const rPlay=$("plRPlay");
+  if(rPlay){const rOn=st.playing&&st.plId===SEL_PL;rPlay.textContent=rOn?"■":"▶";rPlay.title=rOn?"Dừng":"Phát playlist"}
+  const rep=$("plRepBtn"),rm=THEME.plRepeat||"off";
+  if(rep){
+    rep.textContent=rm==="one"?"🔂":"🔁";
+    rep.classList.toggle("on",rm!=="off");
+    rep.title=rm==="one"?"Repeat: Lặp 1 bài":rm==="all"?"Repeat: Lặp cả playlist":"Repeat: Tắt (hết playlist sẽ chuyển tiếp hoặc tắt)";
+  }
+  const slp=$("plSlpLbl"),sb=$("plSlpBtn");
+  if(slp){
+    if(st.sleepOnTrackEnd)slp.textContent="⏱ hết bài";
+    else if(st.sleepEnd>Date.now())slp.textContent="⏱ "+fmtMMSS((st.sleepEnd-Date.now())/1000);
+    else slp.textContent="";
+  }
+  if(sb)sb.classList.toggle("on",!!(st.sleepOnTrackEnd||st.sleepEnd>Date.now()));
+  if(PAGE==="playlist"&&st.playing&&!THEME.lite&&!vizRaf)vizRaf=requestAnimationFrame(drawViz);
+}
+
+function openSleepModal(){
+  modal("hẹn giờ tắt nhạc",`<div class="fm">
+<div class="dim" style="font-size:12px">Chọn thời gian tự động tắt nhạc nền (giảm âm lượng êm dần rồi dừng).</div>
+<div class="acts" style="justify-content:flex-start;flex-wrap:wrap">
+  <button class="btn" type="button" data-sl="15">15 phút</button>
+  <button class="btn" type="button" data-sl="30">30 phút</button>
+  <button class="btn" type="button" data-sl="45">45 phút</button>
+  <button class="btn" type="button" data-sl="60">60 phút</button>
+  <button class="btn pri" type="button" data-sl="track">hết bài hiện tại</button>
+  <button class="btn dng" type="button" data-sl="0">tắt hẹn giờ</button>
+</div>
+<div class="acts"><button class="btn" type="button" id="slCl">đóng</button></div>
+</div>`,mb=>{
+    $("slCl").onclick=closeModal;
+    qsa("[data-sl]",mb).forEach(b=>b.onclick=()=>{BGM.setSleep(b.dataset.sl);SND.tap();closeModal()});
+  });
+}
+
+function renderPlaylist(){
+  closePlPop();
+  $("plCnt").textContent=PLAYLISTS.length+" playlist";
+  $("plAddBtn").onclick=async()=>{
+    const pl={id:"pl_"+rid(),name:"Untitled",logo:"",tracks:[]};
+    PLAYLISTS.push(pl);SEL_PL=pl.id;await savePlaylists();SND.ok();renderPlaylist();
+  };
+
+  // 1) Cột trái: Danh sách Playlists
+  const listEl=$("plList");
+  listEl.innerHTML=PLAYLISTS.length?PLAYLISTS.map(pl=>`
+<div class="pl-item${SEL_PL===pl.id?" on":""}" data-pl="${esc(pl.id)}">
+  <span class="pl-logo">${pl.logo?`<img src="${pl.logo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:7px">`:'♫'}</span>
+  <span class="pl-meta"><b>${esc(pl.name)}</b><small>${pl.tracks.length} bài hát</small></span>
+  <button class="pl-dots" type="button" data-plm="${esc(pl.id)}" aria-label="Tùy chọn playlist">⋮</button>
+</div>`).join(""):`<div class="empty">Chưa có playlist nào.<br>Bấm nút <b>+</b> ở góc trên để tạo.</div>`;
+
+  qsa(".pl-item",listEl).forEach(el=>el.onclick=e=>{
+    if(e.target.closest(".pl-dots"))return;
+    SEL_PL=el.dataset.pl;renderPlaylist();
+  });
+  qsa(".pl-dots",listEl).forEach(btn=>btn.onclick=e=>{
+    e.stopPropagation();closePlPop();
+    const id=btn.dataset.plm,r=btn.getBoundingClientRect();
+    plPop=document.createElement("div");plPop.className="pl-pop";
+    plPop.innerHTML=`<button type="button" data-pa="up">↑ upload</button><button type="button" data-pa="cfg">⚙ config</button><button type="button" class="r" data-pa="del">✕ xóa</button>`;
+    document.body.appendChild(plPop);
+    plPop.style.top=Math.min(innerHeight-plPop.offsetHeight-8,r.bottom+4)+"px";
+    plPop.style.left=Math.min(innerWidth-plPop.offsetWidth-8,Math.max(8,r.right-plPop.offsetWidth))+"px";
+    plPop.onclick=ev=>{
+      const a=ev.target.dataset.pa;if(!a)return;closePlPop();
+      if(a==="up")openPlUploadModal(id);
+      else if(a==="cfg")configPlaylistModal(id);
+      else if(a==="del"){if(confirm(`Xóa playlist "${PLAYLISTS.find(x=>x.id===id)?.name||""}"?`))deletePlaylist(id)}
+    };
+  });
+
+  // 2) Cột giữa: Presets + 6-Band EQ + Visualizer + Repeat + Sleep + Controls
+  $("plEqLbl").textContent=THEME.eqPreset||"Custom";
+  $("plPresets").innerHTML=EQ_PRESETS.map(pr=>`<button type="button" class="pl-pre${THEME.eqPreset===pr.n?" on":""}" data-pre="${esc(pr.n)}"><b>${pr.i} ${esc(pr.n)}</b><small>${esc(pr.d)}</small></button>`).join("");
+  qsa(".pl-pre",$("plPresets")).forEach(b=>b.onclick=()=>{BGM.setPreset(b.dataset.pre);SND.tap();renderPlaylist()});
+
+  const bands=THEME.eqBands||[0,0,0,0,0,0];
+  $("plEq").innerHTML=EQ_BANDS.map((hz,i)=>{
+    const db=+bands[i]||0,pct=(db+12)/24*100;
+    const fillStyle=db>=0?`bottom:50%;height:${db/24*100}%`:`top:50%;height:${-db/24*100}%`;
+    return`<div class="eq-col"><span class="eq-db">${db>0?"+"+db:db}dB</span><div class="eq-sl" data-band="${i}"><div class="eq-bar"><i class="eq-mid"></i><i class="eq-fill" style="${fillStyle}"></i><i class="eq-knob" style="bottom:${pct}%"></i></div></div><span class="eq-hz">${EQ_LABELS[i]}</span></div>`;
+  }).join("");
+  qsa(".eq-sl",$("plEq")).forEach(sl=>{
+    const idx=+sl.dataset.band;
+    const updateFromClientY=cy=>{
+      const r=sl.getBoundingClientRect(),rel=Math.max(0,Math.min(1,1-(cy-r.top)/r.height));
+      const db=Math.round((rel*24-12)*2)/2;
+      BGM.setBand(idx,db);
+      const col=sl.parentElement,fill=sl.querySelector(".eq-fill"),knob=sl.querySelector(".eq-knob");
+      col.querySelector(".eq-db").textContent=(db>0?"+"+db:db)+"dB";
+      knob.style.bottom=(db+12)/24*100+"%";
+      if(db>=0){fill.style.top="";fill.style.bottom="50%";fill.style.height=db/24*100+"%"}
+      else{fill.style.bottom="";fill.style.top="50%";fill.style.height=(-db/24*100)+"%"}
+      $("plEqLbl").textContent="Custom";
+      qsa(".pl-pre.on",$("plPresets")).forEach(x=>x.classList.remove("on"));
+    };
+    sl.onpointerdown=e=>{e.preventDefault();sl.setPointerCapture(e.pointerId);updateFromClientY(e.clientY)};
+    sl.onpointermove=e=>{if(sl.hasPointerCapture(e.pointerId))updateFromClientY(e.clientY)};
+  });
+
+  const sw=$("plSeekWrap"),stEl=$("plSeekTrack");
+  const scrub=cx=>{const r=stEl.getBoundingClientRect();return Math.max(0,Math.min(1,(cx-r.left)/r.width))};
+  sw.onpointerdown=e=>{
+    e.preventDefault();sw.setPointerCapture(e.pointerId);sw.classList.add("drag");BGM.setSeeking(true);
+    const pct=scrub(e.clientX);$("plSeekFill").style.width=pct*100+"%";
+  };
+  sw.onpointermove=e=>{if(sw.hasPointerCapture(e.pointerId))$("plSeekFill").style.width=scrub(e.clientX)*100+"%"};
+  sw.onpointerup=e=>{
+    if(!sw.hasPointerCapture(e.pointerId))return;
+    sw.classList.remove("drag");BGM.setSeeking(false);BGM.seekPct(scrub(e.clientX));
+  };
+  $("plMidPlay").onclick=()=>BGM.togglePlay(null);
+  $("plNextBtn").onclick=()=>BGM.next();
+  $("plBackBtn").onclick=()=>BGM.prev();
+  $("plRepBtn").onclick=()=>{
+    const ord=["off","one","all"],cur=THEME.plRepeat||"off";
+    THEME.plRepeat=ord[(ord.indexOf(cur)+1)%ord.length];
+    LS.set("gg_theme_v1",THEME);SND.tap();syncPlayerUI();
+    toast(THEME.plRepeat==="one"?"🔂 Lặp lại 1 bài":THEME.plRepeat==="all"?"🔁 Lặp lại cả playlist":"🔁 Đã tắt Repeat (tự chuyển playlist / tắt)");
+  };
+  $("plSlpBtn").onclick=openSleepModal;
+
+  // 3) Cột phải: Chi tiết Playlist (mặc định trống nếu chưa chọn)
+  const right=$("plRight"),pl=PLAYLISTS.find(p=>p.id===SEL_PL),bst=BGM.state();
+  if(!pl){$("plRCnt").textContent="";right.innerHTML="";syncPlayerUI();return}
+  $("plRCnt").textContent=pl.tracks.length+" bài";
+  const sparks=Array.from({length:12},(_,i)=>`<i style="--x:${(i*19+7)%94}%;--y:${(i*31+11)%88}%;--sz:${2+i%3}px;--dx:${(i%2?1:-1)*(8+i%10)}px;--dy:${(i%3?-1:1)*(6+i%8)}px;--d:${2.4+i*.25}s;--dl:${(i*.2).toFixed(1)}s"></i>`).join("");
+  right.innerHTML=`
+<div class="pl-head">
+  <div class="pl-hero">
+    <span class="pl-logo">${pl.logo?`<img src="${pl.logo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px">`:'♫'}</span>
+    <div class="pl-title-wrap"><span class="pl-sparks">${sparks}</span><h2 class="pl-title">${esc(pl.name)}</h2></div>
+  </div>
+  <div class="pl-acts">
+    <button class="pl-btn-play" id="plRPlay" type="button" title="Phát / Dừng">${bst.playing&&bst.plId===pl.id?"■":"▶"}</button>
+    <button class="pl-btn-shuf${THEME.plShuffle?" on":""}" id="plRShuf" type="button" title="Phát ngẫu nhiên (Shuffle)">🔀</button>
+    <button class="btn" id="plRUp" type="button">+ thêm nhạc</button>
+  </div>
+</div>
+<div class="pl-tracks">${pl.tracks.length?pl.tracks.map((tr,i)=>{const on=bst.plId===pl.id&&bst.trId===tr.id;return`<div class="pl-tr${on?" on":""}" data-tr="${esc(tr.id)}"><span class="pt-i">${on?"▶":i+1}</span><span class="pt-n">${esc(tr.name)}</span><span class="pt-d">${fmtMMSS(tr.dur)}</span><button class="mini r" type="button" data-trd="${esc(tr.id)}" title="Xóa bài">✕</button></div>`}).join(""):'<div class="empty">Playlist đang trống.<br>Bấm "+ thêm nhạc" hoặc chọn ⋮ → upload ở cột trái.</div>'}</div>`;
+
+  $("plRPlay").onclick=()=>BGM.togglePlay(pl.id);
+  $("plRShuf").onclick=()=>{THEME.plShuffle=!THEME.plShuffle;LS.set("gg_theme_v1",THEME);SND.tap();renderPlaylist()};
+  $("plRUp").onclick=()=>openPlUploadModal(pl.id);
+  qsa(".pl-tr",right).forEach(row=>row.onclick=async e=>{
+    const delId=e.target.dataset.trd;
+    if(delId){e.stopPropagation();pl.tracks=pl.tracks.filter(t=>t.id!==delId);await GGDB.del("pl_tr_"+delId);await savePlaylists();SND.tap();return renderPlaylist()}
+    BGM.playTrack(pl.id,row.dataset.tr);
+  });
+  syncPlayerUI();
 }
 
 // =====================================================================
@@ -2449,6 +3043,62 @@ function roleModal(n){
       u.roles=r;putUser(u);act("role",`<b>${esc(ME)}</b> đổi vai trò ${n===ME?"của mình":"của "+esc(n)} → ${r.map(esc).join(", ")||"(trống)"}`);closeModal();SND.ok()};
   });
 }
+function avModal(n){
+  if(!canEditUser(n))return;
+  const u=U(n);if(!u)return;
+  let pickedFile=null,previewUrl=u.av||"",resetDefault=false;
+  const drawPrev=()=>$("avPrev").style.backgroundImage=previewUrl?`url(${previewUrl})`:"";
+  modal("đổi avatar · "+n,`<div class="fm">
+<div style="display:flex;align-items:center;gap:14px">
+  <span class="av bav" id="avPrev"${avStyle(u)} style="width:84px;height:84px;border-radius:14px"></span>
+  <div style="display:grid;gap:8px;flex:1">
+    <div class="dim" style="font-size:12px">Chọn ảnh bất kỳ (tự cắt vuông 1:1). Các tài khoản mới sẽ dùng avatar mặc định của team cho tới khi tự đổi.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn pri" id="avPick" type="button">↑ chọn ảnh</button>
+      ${u.av?'<button class="btn dng" id="avDef" type="button">dùng mặc định</button>':""}
+      <input type="file" id="avIn" accept="image/*" hidden>
+    </div>
+  </div>
+</div>
+<div class="acts"><button class="btn" id="avCl" type="button">hủy</button><button class="btn pri" id="avSv" type="button">lưu avatar</button></div>
+</div>`,()=>{
+    $("avCl").onclick=closeModal;
+    $("avPick").onclick=()=>$("avIn").click();
+    if($("avDef"))$("avDef").onclick=()=>{pickedFile=null;previewUrl="";resetDefault=true;drawPrev()};
+    $("avIn").onchange=async e=>{
+      const f=e.target.files&&e.target.files[0];if(!f)return;
+      try{
+        const dataUrl=await cropSquareLogo(f);
+        previewUrl=dataUrl;resetDefault=false;drawPrev();
+        const blob=await (await fetch(dataUrl)).blob();
+        pickedFile=new File([blob],`av_${n}.jpg`,{type:"image/jpeg"});
+      }catch(err){toast("⚠ "+(err.message||"Không đọc được ảnh"),1)}
+    };
+    $("avSv").onclick=async()=>{
+      const cur=U(n);if(!cur)return closeModal();
+      if(resetDefault){
+        if(cur.avPath)Store.removeFile(cur.avPath);
+        delete cur.av;delete cur.avPath;
+        putUser(cur);act("edit",`<b>${esc(ME)}</b> đặt lại avatar mặc định${n!==ME?" cho "+esc(n):""}`);
+        closeModal();SND.ok();toast("Đã đặt lại avatar mặc định");return;
+      }
+      if(!pickedFile)return closeModal();
+      $("avSv").disabled=true;$("avSv").textContent="đang lưu…";
+      try{
+        if(Store.mode()==="supabase"){
+          const meta=await Store.uploadFile(pickedFile,"avatars");
+          if(cur.avPath)Store.removeFile(cur.avPath);
+          cur.av=meta.url;cur.avPath=meta.path;
+        }else{
+          cur.av=previewUrl;cur.avPath=null;
+        }
+        putUser(cur);
+        act("edit",`<b>${esc(ME)}</b> cập nhật avatar mới${n!==ME?" cho "+esc(n):""}`);
+        closeModal();SND.ok();toast("✔ Đã cập nhật avatar");
+      }catch(err){$("avSv").disabled=false;$("avSv").textContent="lưu avatar";toast("⚠ Lỗi lưu avatar: "+(err.message||err),1)}
+    };
+  });
+}
 function bioModal(n){
   const u=U(n);
   modal("giới thiệu · "+n,`<form class="fm" id="bf"><label>Giới thiệu ngắn<textarea name="bio" maxlength="300">${esc(u.bio||"")}</textarea></label><label>CTFtime user id<input name="ctf" type="number" min="0" value="${u.ctf||""}"></label><div class="acts"><button class="btn" type="button" id="bcl">hủy</button><button class="btn pri" type="submit">lưu</button></div></form>`,()=>{
@@ -2613,7 +3263,7 @@ const cv=$("rain"),cx=cv.getContext("2d");
 let cols,drops;
 const CH="01ABCDEF<>/#";
 function sizeRain(){cv.width=innerWidth;cv.height=innerHeight;cols=Math.floor(innerWidth/16);drops=Array.from({length:cols},()=>Math.random()*-60)}
-const DEF_THEME={lite:false,sfxVol:60,bgmOn:true,bgmVol:65,bgmName:"",deskNotify:false,focusMode:false,uiScale:"md",bgMode:"color",color:"#00A8FF",img:"",autoVibe:true,dim:55,panelAlpha:85,liquid:false,titleColor:"#39FF14",curMode:"default",curName:"",curSlots:null,customSet:false};
+const DEF_THEME={lite:false,sfxVol:60,bgmOn:true,bgmVol:65,eqPreset:"Flat",eqBands:[0,0,0,0,0,0],plShuffle:false,plRepeat:"off",activePlId:null,deskNotify:false,focusMode:false,uiScale:"md",bgMode:"color",color:"#00A8FF",img:"",autoVibe:true,dim:55,panelAlpha:85,liquid:false,titleColor:"#39FF14",curMode:"default",curName:"",curSlots:null,customSet:false};
 const VIBE_PRESETS=[
   {name:"Cyber Blue",color:"#00A8FF",title:"#39FF14",custom:false},
   {name:"Matrix Toxic",color:"#39FF14",title:"#00FFFF",custom:true},
@@ -2650,10 +3300,11 @@ async function deskPush(title,body,onClick,forcePopup){
     }catch(_){}
   }
   if(!shownSys||forcePopup||isTouchPhone())showInAppPush(title,body,onClick);
-} THEME=Object.assign({},DEF_THEME,LS.get("gg_theme_v1",{}));
+}
+let THEME=Object.assign({},DEF_THEME,LS.get("gg_theme_v1",{}));
 let RAIN_C1="#00A8FF",RAIN_C2="#00FFFF",CUR_PACK=null;
 
-// ===== IndexedDB lưu file âm nhạc (tới 500MB) & Cursor Pack dung lượng lớn =====
+// ===== IndexedDB lưu file âm nhạc & Cursor Pack =====
 const GGDB=(()=>{
   let dbp=null;
   const open=()=>{
@@ -2673,50 +3324,212 @@ const GGDB=(()=>{
   };
 })();
 
-// ===== Trình phát Âm nhạc (BGM) =====
+// ===== 14 Presets Equalizer (bao gồm Church với Reverb nhà thờ thánh thót) =====
+const EQ_BANDS=[60,250,1000,4000,8000,16000];
+const EQ_LABELS=["60Hz","250Hz","1kHz","4kHz","8kHz","16kHz"];
+const EQ_PRESETS=[
+  {n:"Flat",d:"Neutral sound",i:"♫",g:[0,0,0,0,0,0]},
+  {n:"Bass Boost",d:"Enhanced low end",i:"🔊",g:[7,4.5,0,-1,0,0]},
+  {n:"Treble Boost",d:"Enhanced highs",i:"✨",g:[0,0,0.5,3.5,6,7.5]},
+  {n:"V-Shaped",d:"Bass and treble",i:"📈",g:[6,2.5,-3,1.5,5,6.5]},
+  {n:"Vocal Enhance",d:"Clearer vocals",i:"🎙",g:[-2,0,4.5,5.5,2.5,0]},
+  {n:"Rock",d:"Powerful rock sound",i:"🎸",g:[5,2,-1.5,3,4.5,5]},
+  {n:"Jazz",d:"Warm and smooth",i:"🎷",g:[3.5,2,1.5,2.5,1,3]},
+  {n:"Electronic",d:"Punchy electronic",i:"⚡",g:[6.5,3,-1,2.5,5.5,6]},
+  {n:"Classical",d:"Natural orchestral",i:"🎻",g:[2,1,0,1.5,3,4.5]},
+  {n:"Podcast",d:"Optimized for voice",i:"🎧",g:[-4,-1,4,5,2,-2]},
+  {n:"Bass Heavy",d:"Maximum bass",i:"🔥",g:[9.5,6.5,1,-1.5,0,0]},
+  {n:"Bright",d:"Crisp and clear highs",i:"☀",g:[-1,0,1.5,4.5,7,8]},
+  {n:"Warm",d:"Smooth and mellow",i:"🕯",g:[4.5,3.5,1,-2,-3.5,-4]},
+  {n:"Church",d:"Cathedral reverb & airy",i:"⛪",g:[1,2,1.5,4.5,6.5,5.5],rev:true}
+];
+
+let PLAYLISTS=[];
+// ===== Trình phát Âm nhạc (BGM + 6-Band EQ + Church Reverb + Visualizer + Repeat + Sleep Timer) =====
 const BGM=(()=>{
   const el=new Audio();
-  el.loop=true;el.preload="metadata";
-  let objUrl=null,inited=false;
-  const setSrc=u=>{if(objUrl&&objUrl!==u){URL.revokeObjectURL(objUrl);objUrl=null}el.src=u};
+  el.preload="metadata";
+  let ac=null,filters=[],dry=null,wet=null,analyser=null,gainOut=null,botGain=null,botDest=null,eqBuilt=false;
+  let objUrl=null,inited=false,curPlId=null,curTrackId=null,seeking=false;
+  let sleepEnd=0,sleepOnTrackEnd=false,sleepTimer=0;
+
+  function makeChurchIR(c){
+    const len=Math.floor(c.sampleRate*2.8),ir=c.createBuffer(2,len,c.sampleRate);
+    for(let ch=0;ch<2;ch++){
+      const d=ir.getChannelData(ch);let lp=0;
+      for(let i=0;i<len;i++){
+        const env=Math.pow(1-i/len,2.35);
+        const early=(i<c.sampleRate*.09&&i%1700<4)?.55:0;
+        lp+=(Math.random()*2-1-lp)*.26;
+        d[i]=(lp*.68+early)*env;
+      }
+    }
+    return ir;
+  }
+  function setupAudioGraph(){
+    if(eqBuilt)return;
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    try{
+      ac=new AC();
+      const src=ac.createMediaElementSource(el);
+      let node=src;
+      filters=EQ_BANDS.map((hz,idx)=>{
+        const f=ac.createBiquadFilter();
+        f.type=idx===0?"lowshelf":idx===EQ_BANDS.length-1?"highshelf":"peaking";
+        f.frequency.value=hz;f.Q.value=1.1;
+        f.gain.value=(THEME.eqBands&&THEME.eqBands[idx])||0;
+        node.connect(f);node=f;return f;
+      });
+      dry=ac.createGain();wet=ac.createGain();
+      analyser=ac.createAnalyser();analyser.fftSize=64;analyser.smoothingTimeConstant=.78;
+      gainOut=ac.createGain();
+      const conv=ac.createConvolver();conv.buffer=makeChurchIR(ac);
+      node.connect(dry);dry.connect(analyser);
+      node.connect(conv);conv.connect(wet);wet.connect(analyser);
+      analyser.connect(gainOut);gainOut.connect(ac.destination);
+      botGain=ac.createGain();botGain.gain.value=.85;
+      botDest=ac.createMediaStreamDestination();
+      analyser.connect(botGain);botGain.connect(botDest);
+      eqBuilt=true;applyEQ();
+    }catch(_){ac=null;eqBuilt=false}
+  }
+  function applyEQ(){
+    const bands=THEME.eqBands||[0,0,0,0,0,0];
+    filters.forEach((f,i)=>{if(f)f.gain.value=Math.max(-12,Math.min(12,+bands[i]||0))});
+    const isChurch=THEME.eqPreset==="Church";
+    if(dry&&wet){dry.gain.value=isChurch?.76:1;wet.gain.value=isChurch?.52:0}
+    const v=Math.max(0,Math.min(1,(THEME.bgmVol??65)/100));
+    if(gainOut)gainOut.gain.value=v;else el.volume=v;
+  }
+  function setSrc(u,loopFallback){
+    if(objUrl&&objUrl!==u){URL.revokeObjectURL(objUrl);objUrl=null}
+    el.loop=!!loopFallback;el.src=u;
+  }
+  async function loadTrackBlob(plId,trId){
+    const pl=PLAYLISTS.find(p=>p.id===plId),tr=pl&&pl.tracks.find(t=>t.id===trId);
+    if(!pl||!tr)return false;
+    const blob=await GGDB.get("pl_tr_"+tr.id);if(!blob)return false;
+    curPlId=plId;curTrackId=trId;
+    THEME.activePlId=plId;LS.set("gg_theme_v1",THEME);
+    const u=URL.createObjectURL(blob);
+    if(objUrl)URL.revokeObjectURL(objUrl);
+    objUrl=u;el.loop=false;el.src=u;
+    return true;
+  }
+  async function playTrack(plId,trId){
+    setupAudioGraph();
+    if(ac&&ac.state==="suspended")ac.resume().catch(()=>{});
+    if(!await loadTrackBlob(plId,trId))return toast("Không tìm thấy dữ liệu bài hát",1);
+    THEME.bgmOn=true;LS.set("gg_theme_v1",THEME);
+    applyEQ();el.play().catch(()=>{});
+    syncPlayerUI();
+    if(typeof Voice!=="undefined")Voice.onMusicPlay(plId,trId);
+    if(PAGE==="playlist")renderPlaylist();
+  }
+  function togglePlay(plId){
+    setupAudioGraph();
+    if(ac&&ac.state==="suspended")ac.resume().catch(()=>{});
+    const pl=PLAYLISTS.find(p=>p.id===(plId||curPlId||THEME.activePlId));
+    if(plId&&plId!==curPlId){
+      if(!pl||!pl.tracks.length)return toast("Playlist chưa có bài hát nào",1);
+      const idx=THEME.plShuffle?Math.floor(Math.random()*pl.tracks.length):0;
+      return playTrack(pl.id,pl.tracks[idx].id);
+    }
+    if(curPlId&&!el.paused){
+      el.pause();THEME.bgmOn=false;LS.set("gg_theme_v1",THEME);syncPlayerUI();
+      if(typeof Voice!=="undefined")Voice.onMusicStop();
+      return;
+    }
+    if(!curTrackId&&pl&&pl.tracks.length){
+      const idx=THEME.plShuffle?Math.floor(Math.random()*pl.tracks.length):0;
+      return playTrack(pl.id,pl.tracks[idx].id);
+    }
+    if(el.paused){THEME.bgmOn=true;LS.set("gg_theme_v1",THEME);el.play().catch(()=>{});if(typeof Voice!=="undefined"&&curPlId)Voice.onMusicPlay(curPlId,curTrackId)}
+    else{THEME.bgmOn=false;LS.set("gg_theme_v1",THEME);el.pause();if(typeof Voice!=="undefined")Voice.onMusicStop()}
+    syncPlayerUI();
+  }
+  function step(dir,fromEnd){
+    const plIdx=PLAYLISTS.findIndex(p=>p.id===(curPlId||THEME.activePlId));
+    const pl=PLAYLISTS[plIdx];
+    if(!pl||!pl.tracks.length)return;
+    const rep=THEME.plRepeat||"off";
+    if(fromEnd&&rep==="one"){el.currentTime=0;el.play().catch(()=>{});return}
+    const len=pl.tracks.length;
+    let idx=pl.tracks.findIndex(t=>t.id===curTrackId);
+    if(THEME.plShuffle&&len>1){
+      if(fromEnd&&rep==="off"&&idx===len-1){/* chuyển sang playlist kế tiếp */}
+      else{let r=idx;while(r===idx)r=Math.floor(Math.random()*len);return playTrack(pl.id,pl.tracks[r].id)}
+    }
+    if(fromEnd&&rep==="off"&&idx>=len-1){
+      const nextPl=PLAYLISTS.slice(plIdx+1).find(p=>p.tracks&&p.tracks.length);
+      if(nextPl)return playTrack(nextPl.id,nextPl.tracks[0].id);
+      el.pause();el.currentTime=0;THEME.bgmOn=false;LS.set("gg_theme_v1",THEME);syncPlayerUI();
+      if(typeof Voice!=="undefined")Voice.onMusicStop();
+      if(PAGE==="playlist")renderPlaylist();
+      return;
+    }
+    idx=idx<0?0:(idx+dir+len)%len;
+    playTrack(pl.id,pl.tracks[idx].id);
+  }
+  function triggerSleepStop(){
+    sleepEnd=0;sleepOnTrackEnd=false;clearInterval(sleepTimer);sleepTimer=0;
+    const startV=gainOut?gainOut.gain.value:el.volume;
+    let k=10;
+    const fd=setInterval(()=>{
+      k--;const nv=Math.max(0,startV*(k/10));
+      if(gainOut)gainOut.gain.value=nv;else el.volume=nv;
+      if(k<=0){
+        clearInterval(fd);el.pause();THEME.bgmOn=false;LS.set("gg_theme_v1",THEME);applyEQ();syncPlayerUI();
+        if(typeof Voice!=="undefined")Voice.onMusicStop();
+        toast("⏱ Đã tắt nhạc theo hẹn giờ");
+      }
+    },140);
+  }
+  function setSleep(mode){
+    clearInterval(sleepTimer);sleepTimer=0;sleepEnd=0;sleepOnTrackEnd=false;
+    if(mode==="track"){sleepOnTrackEnd=true;toast("⏱ Nhạc sẽ tắt sau hết bài này")}
+    else if(+mode>0){
+      sleepEnd=Date.now()+(+mode)*60000;
+      sleepTimer=setInterval(()=>{if(sleepEnd&&Date.now()>=sleepEnd)triggerSleepStop();else syncPlayerUI()},1000);
+      toast(`⏱ Hẹn giờ tắt nhạc sau ${mode} phút`);
+    }
+    syncPlayerUI();
+  }
+
+  el.onended=()=>{
+    if(sleepOnTrackEnd){triggerSleepStop();return}
+    if(curPlId)step(1,true);
+  };
+  el.ontimeupdate=()=>{if(!seeking)syncPlayerUI()};
+  el.onloadedmetadata=syncPlayerUI;
+  el.onplay=syncPlayerUI;
+  el.onpause=syncPlayerUI;
+
   async function init(){
     if(inited)return;inited=true;
-    if(THEME.bgmName){
-      const blob=await GGDB.get("bgm_blob");
-      if(blob){objUrl=URL.createObjectURL(blob);setSrc(objUrl);return sync()}
-      THEME.bgmName="";LS.set("gg_theme_v1",THEME);
-    }
-    setSrc("music.mp3");sync();
+    PLAYLISTS=(await GGDB.get("playlists_v1"))||[];
+    const pl=PLAYLISTS.find(p=>p.id===THEME.activePlId)||PLAYLISTS.find(p=>p.tracks.length);
+    if(pl&&pl.tracks.length)await loadTrackBlob(pl.id,pl.tracks[0].id);
+    else setSrc("music.mp3",true);
+    sync();
   }
   function sync(){
-    el.volume=Math.max(0,Math.min(1,(THEME.bgmVol??65)/100));
-    if(!booted||THEME.bgmOn===false){el.pause();return}
-    if(el.src)el.play().catch(()=>{});
+    applyEQ();
+    if(!booted||THEME.bgmOn===false){el.pause();syncPlayerUI();return}
+    if(el.src){setupAudioGraph();if(ac&&ac.state==="suspended")ac.resume().catch(()=>{});el.play().catch(()=>{})}
+    syncPlayerUI();
   }
-  async function upload(file){
-    if(file.size>500*1024*1024)throw new Error("File nhạc vượt quá 500MB");
-    if(!((file.type||"").startsWith("audio/")||/\.(mp3|wav|ogg|flac|aac|m4a|opus|webm|wma)$/i.test(file.name)))
-      throw new Error("Chỉ chấp nhận định dạng file âm thanh");
-    const tmpUrl=URL.createObjectURL(file);
-    try{
-      const durSec=await new Promise((res,rej)=>{
-        const a=new Audio();a.preload="metadata";a.src=tmpUrl;
-        a.onloadedmetadata=()=>res(a.duration);
-        a.onerror=()=>rej(new Error("Không đọc được file âm thanh này"));
-      });
-      if(!isFinite(durSec)||durSec>=3600)throw new Error("Bài nhạc phải ngắn hơn 1 tiếng (< 60 phút)");
-      await GGDB.set("bgm_blob",file);
-      if(objUrl)URL.revokeObjectURL(objUrl);
-      objUrl=tmpUrl;el.src=objUrl;
-      THEME.bgmName=file.name;THEME.bgmOn=true;saveTheme();
-      el.play().catch(()=>{});
-    }catch(e){URL.revokeObjectURL(tmpUrl);throw e}
-  }
-  async function resetDefault(){
-    await GGDB.del("bgm_blob");
-    THEME.bgmName="";setSrc("music.mp3");saveTheme();
-  }
-  return{init,sync,upload,resetDefault};
+  function setPreset(name){const pr=EQ_PRESETS.find(p=>p.n===name);if(!pr)return;THEME.eqPreset=pr.n;THEME.eqBands=pr.g.slice();LS.set("gg_theme_v1",THEME);applyEQ()}
+  function setBand(idx,val){const b=(THEME.eqBands||[0,0,0,0,0,0]).slice();b[idx]=Math.max(-12,Math.min(12,Math.round(val*2)/2));THEME.eqBands=b;THEME.eqPreset="Custom";LS.set("gg_theme_v1",THEME);applyEQ()}
+  function seekPct(pct){if(!isFinite(el.duration)||el.duration<=0)return;el.currentTime=Math.max(0,Math.min(1,pct))*el.duration;syncPlayerUI()}
+  function getFreq(outArr){if(!analyser)return false;analyser.getByteFrequencyData(outArr);return true}
+  function getBotStream(){setupAudioGraph();return botDest?botDest.stream:null}
+
+  return{
+    init,sync,playTrack,togglePlay,next:()=>step(1,false),prev:()=>step(-1,false),setPreset,setBand,seekPct,setSleep,getFreq,getBotStream,
+    setSeeking:v=>{seeking=v},
+    state:()=>({plId:curPlId,trId:curTrackId,playing:!el.paused&&!!el.src,cur:el.currentTime||0,dur:isFinite(el.duration)?el.duration:0,sleepEnd,sleepOnTrackEnd})
+  };
 })();
 
 function hexToRgb(hex){
@@ -3108,9 +3921,10 @@ function settingsModal(){
   <div class="st-row"><span><b>Giản lược Effects</b><br><small class="dim">Tắt nhiễu CRT &amp; line chạy nền, giữ chớp nháy tên team</small></span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stLite"${THEME.lite?" checked":""} style="accent-color:var(--g);width:17px;height:17px"> Bật</label></div>
   <div class="st-row"><span><b>Âm thanh SFX (Hiệu ứng)</b><br><small class="dim">Tiếng bàn phím, thông báo &amp; nút bấm</small></span><button class="btn${SND.isMuted()?"":" pri"}" id="stSnd" type="button"${SND.hasAudio()?"":" disabled"}>${SND.isMuted()?"♪ SFX: tắt":"♪ SFX: bật"}</button></div>
   <div class="st-row"><span>Âm lượng SFX (<b class="pct-ed" id="stSfxV" title="Bấm để nhập số (0–100%)">${THEME.sfxVol??60}%</b>)</span><input type="range" id="stSfxR" min="0" max="100" value="${THEME.sfxVol??60}"></div>
-  <div class="st-row"><span><b>Âm nhạc nền (BGM)</b><br><small class="dim">Đang phát: <b style="color:var(--c)">${esc(THEME.bgmName||"music.mp3 (mặc định)")}</b></small></span><span style="display:flex;gap:6px"><button class="btn${THEME.bgmOn!==false?" pri":""}" id="stBgmTog" type="button">${THEME.bgmOn!==false?"♫ bật":"♫ tắt"}</button><button class="btn" id="stBgmUp" type="button">↑ tải nhạc</button>${THEME.bgmName?'<button class="btn dng" id="stBgmDef" type="button">mặc định</button>':""}<input type="file" id="stBgmIn" accept="audio/*" hidden></span></div>
+  <div class="st-row"><span><b>Âm nhạc nền (BGM)</b><br><small class="dim">Quản lý danh sách phát tại tab <b style="color:var(--c)">5 playlist</b></small></span><button class="btn${THEME.bgmOn!==false?" pri":""}" id="stBgmTog" type="button">${THEME.bgmOn!==false?"♫ BGM: bật":"♫ BGM: tắt"}</button></div>
   <div class="st-row"><span>Âm lượng nhạc (<b class="pct-ed" id="stBgmV" title="Bấm để nhập số (0–100%)">${THEME.bgmVol??65}%</b>)</span><input type="range" id="stBgmR" min="0" max="100" value="${THEME.bgmVol??65}"></div>
   <div class="st-row"><span><b>Thông báo Popup</b><br><small class="dim">Thông báo hệ thống PC/Android &amp; popup nổi trên điện thoại</small></span><button class="btn${THEME.deskNotify?" pri":""}" id="stDesk" type="button">${THEME.deskNotify?"🔔 đang bật":"🔕 đang tắt"}</button></div>
+</div>
 ${member()?`<div class="st-sec">
   <div class="sec" style="margin:0">// CÀI ĐẶT NỀN, VIBE &amp; HIỂN THỊ</div>
   <div class="st-row"><span><b>Cỡ chữ giao diện</b></span><div class="scale-seg">${[["sm","Gọn"],["md","Chuẩn"],["lg","Lớn"]].map(([k,l])=>`<button type="button" data-sc="${k}" class="${(THEME.uiScale||"md")===k?"on":""}">${l}</button>`).join("")}</div></div>
@@ -3157,16 +3971,9 @@ ${isTouchPhone()?"":`<div class="st-sec" id="stCurSec">
       $("stSnd").onclick=()=>{const on=SND.toggle();$("stSnd").textContent=on?"♪ SFX: bật":"♪ SFX: tắt";$("stSnd").className="btn"+(on?" pri":"")};
       $("stSfxR").oninput=e=>{THEME.sfxVol=+e.target.value;$("stSfxV").textContent=THEME.sfxVol+"%";saveTheme()};
       bindPctEdit("stSfxV","stSfxR",v=>{THEME.sfxVol=v;saveTheme()});
-      $("stBgmTog").onclick=()=>{THEME.bgmOn=THEME.bgmOn===false?true:false;saveTheme();$("stBgmTog").textContent=THEME.bgmOn?"♫ bật":"♫ tắt";$("stBgmTog").className="btn"+(THEME.bgmOn?" pri":"")};
+      $("stBgmTog").onclick=()=>{THEME.bgmOn=THEME.bgmOn===false?true:false;saveTheme();$("stBgmTog").textContent=THEME.bgmOn?"♫ BGM: bật":"♫ BGM: tắt";$("stBgmTog").className="btn"+(THEME.bgmOn?" pri":"")};
       $("stBgmR").oninput=e=>{THEME.bgmVol=+e.target.value;$("stBgmV").textContent=THEME.bgmVol+"%";saveTheme()};
       bindPctEdit("stBgmV","stBgmR",v=>{THEME.bgmVol=v;saveTheme()});
-      $("stBgmUp").onclick=()=>$("stBgmIn").click();
-      $("stBgmIn").onchange=async e=>{
-        const f=e.target.files&&e.target.files[0];if(!f)return;
-        try{await BGM.upload(f);SND.ok();toast("♫ Đã nạp & phát: "+f.name);mb.innerHTML=draw();bind()}
-        catch(err){toast("⚠ "+(err.message||"Không thể nạp nhạc"),1)}
-      };
-      if($("stBgmDef"))$("stBgmDef").onclick=async()=>{await BGM.resetDefault();SND.tap();toast("Đã quay về music.mp3 mặc định");mb.innerHTML=draw();bind()};
       $("stDesk").onclick=async()=>{
         if(THEME.deskNotify){THEME.deskNotify=false;saveTheme();mb.innerHTML=draw();bind();return}
         THEME.deskNotify=true;saveTheme();
@@ -3279,7 +4086,7 @@ ${isTouchPhone()?"":`<div class="st-sec" id="stCurSec">
       };
       $("stReset").onclick=async()=>{
         THEME=Object.assign({},DEF_THEME);LS.del("gg_theme_v1");
-        CUR_PACK=null;await GGDB.del("cur_pack_v1");await BGM.resetDefault();
+        CUR_PACK=null;await GGDB.del("cur_pack_v1");await BGM.sync();
         applyTheme();SND.tap();toast("Đã khôi phục mặc định");mb.innerHTML=draw();bind();
       };
     };
@@ -3689,6 +4496,519 @@ async function onUnlocked(){
   checkShifts();
   setInterval(()=>loadCT(false),CFG.CT_REFRESH*6e4);
 }
+// =====================================================================
+//  HỆ THỐNG VOICE CHAT WEBRTC (MIC, CAM, SHARE SCREEN, MUSIC BOT, HOST CTRL)
+// =====================================================================
+const Voice=(()=>{
+  const ICE={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]};
+  let noteId=null,vcId=null,chan=null,bc=null,myPeerId=null,openUI=false,withChat=false;
+  let micOn=false,camOn=false,deafOn=false,scrOn=false,musOn=false;
+  let micStream=null,camStream=null,scrStream=null,musicInfo=null,focusKey=null;
+  const peers=new Map(),peerState=new Map(),speaking=new Set(),botVols=new Map();
+  let audCtx=null,spkTimer=0,vcCtxPop=null,avatarColors=new Map();
+
+  const noteDoc=()=>noteId?Store.get(noteId):null;
+  const roomData=()=>noteDoc()?.data?.voice||null;
+  const isHost=()=>!!(roomData()&&roomData().by===ME);
+  const canMusic=()=>!!(roomData()&&(roomData().by===ME||(roomData().dj||[]).includes(ME)));
+
+  function closeCtx(){if(vcCtxPop){vcCtxPop.remove();vcCtxPop=null}}
+  document.addEventListener("pointerdown",e=>{if(vcCtxPop&&!vcCtxPop.contains(e.target)&&!e.target.closest(".vc-tile-menu"))closeCtx()});
+
+  function tileColor(name){
+    const u=U(name),key=name+"|"+(u?.av||"");
+    if(avatarColors.has(key))return avatarColors.get(key);
+    let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))%360;
+    if(u&&u.accId==="#5H4RK")h=232;
+    const fb=`radial-gradient(circle at 50% 35%,hsl(${h},55%,18%),hsl(${h},62%,8%))`;
+    avatarColors.set(key,fb);
+    if(u&&u.av){
+      extractImageVibe(u.av).then(hex=>{
+        const [r,g,b]=hexToRgb(hex),[eh,es]=rgbToHsl(r,g,b);
+        const bg=`radial-gradient(circle at 50% 35%,hsl(${eh},${Math.min(70,Math.max(30,es))}%,22%),hsl(${eh},${Math.min(72,Math.max(28,es))}%,9%))`;
+        avatarColors.set(key,bg);
+        qsa(`.vc-tile[data-u]`,$("vcGrid")).forEach(el=>{if(el.dataset.u===name)el.style.setProperty("--vc-bg",bg)});
+      });
+    }
+    return fb;
+  }
+
+  function sigSend(type,payload,to){
+    const msg={type,from:myPeerId,name:ME,to:to||null,payload};
+    if(chan)chan.send({type:"broadcast",event:"sig",payload:msg}).catch(()=>{});
+    else if(bc)bc.postMessage(msg);
+  }
+  function myStatePayload(){
+    return{
+      name:ME,mic:micOn,cam:camOn,deaf:deafOn,scr:scrOn,
+      micId:micStream?.id||null,camId:camStream?.id||null,
+      scrId:scrStream?.id||null,
+      botId:musOn?(BGM.getBotStream()?.id||null):null,
+      music:musOn?musicInfo:null
+    };
+  }
+  function broadcastState(to){sigSend("state",myStatePayload(),to)}
+
+  function attachAnalyser(stream,key){
+    try{
+      if(!audCtx)audCtx=new(window.AudioContext||window.webkitAudioContext)();
+      const src=audCtx.createMediaStreamSource(stream),an=audCtx.createAnalyser();
+      an.fftSize=128;src.connect(an);
+      const buf=new Uint8Array(an.frequencyBinCount);
+      return{an,buf,key};
+    }catch(_){return null}
+  }
+  let localAn=null;const remoteAns=new Map();
+  function startSpeakingLoop(){
+    clearInterval(spkTimer);
+    spkTimer=setInterval(()=>{
+      const check=(anObj,key,muted)=>{
+        if(!anObj||muted){speaking.delete(key);return}
+        anObj.an.getByteFrequencyData(anObj.buf);
+        let sum=0;for(let i=0;i<anObj.buf.length;i++)sum+=anObj.buf[i];
+        if(sum/anObj.buf.length>14)speaking.add(key);else speaking.delete(key);
+      };
+      check(localAn,"self",!micOn);
+      remoteAns.forEach((anObj,pid)=>check(anObj,pid,false));
+      qsa(".vc-tile[data-spk]").forEach(el=>el.classList.toggle("speaking",speaking.has(el.dataset.spk)));
+    },110);
+  }
+
+  function syncSenders(pcObj){
+    const pc=pcObj.pc,desired=[];
+    if(micStream)micStream.getAudioTracks().forEach(t=>desired.push({t,s:micStream}));
+    if(camOn&&camStream)camStream.getVideoTracks().forEach(t=>desired.push({t,s:camStream}));
+    if(scrOn&&scrStream)scrStream.getTracks().forEach(t=>desired.push({t,s:scrStream}));
+    if(musOn){const bs=BGM.getBotStream();if(bs)bs.getAudioTracks().forEach(t=>desired.push({t,s:bs}))}
+    const senders=pc.getSenders();
+    senders.forEach(sd=>{if(sd.track&&!desired.some(d=>d.t===sd.track))try{pc.removeTrack(sd)}catch(_){}});
+    desired.forEach(d=>{if(!senders.some(sd=>sd.track===d.t))try{pc.addTrack(d.t,d.s)}catch(_){}});
+  }
+
+  function ensurePeer(pid,name){
+    if(pid===myPeerId)return null;
+    let pObj=peers.get(pid);
+    if(pObj)return pObj;
+    const pc=new RTCPeerConnection(ICE);
+    pObj={id:pid,name,pc,polite:myPeerId<pid,making:false,ignore:false,streams:new Map(),audios:new Map()};
+    peers.set(pid,pObj);
+
+    pc.onicecandidate=e=>{if(e.candidate)sigSend("ice",e.candidate,pid)};
+    pc.onnegotiationneeded=async()=>{
+      try{
+        pObj.making=true;await pc.setLocalDescription();
+        sigSend("desc",pc.localDescription,pid);
+      }catch(_){}finally{pObj.making=false}
+    };
+    pc.ontrack=e=>{
+      const st=e.streams[0];if(!st)return;
+      pObj.streams.set(st.id,st);
+      if(e.track.kind==="audio"){
+        const pst=peerState.get(pid)||{};
+        if(st.id!==pst.botId)remoteAns.set(pid,attachAnalyser(st,pid));
+      }
+      e.track.onended=()=>{pObj.streams.delete(st.id);renderVoiceGrid()};
+      renderVoiceGrid();
+    };
+    pc.onconnectionstatechange=()=>{
+      if(["failed","closed"].includes(pc.connectionState)){dropPeer(pid)}
+    };
+    syncSenders(pObj);
+    return pObj;
+  }
+
+  function dropPeer(pid){
+    const pObj=peers.get(pid);
+    if(pObj){
+      pObj.audios.forEach(a=>{a.pause();a.srcObject=null});
+      try{pObj.pc.close()}catch(_){}
+      peers.delete(pid);
+    }
+    remoteAns.delete(pid);
+    if(peerState.has(pid)){peerState.delete(pid);SND.vcPeerLeave()}
+    if(focusKey&&focusKey.startsWith(pid+":"))focusKey=null;
+    renderVoiceGrid();
+  }
+
+  async function onSig(msg){
+    if(!msg||msg.from===myPeerId)return;
+    if(msg.to&&msg.to!==myPeerId)return;
+    const {type,from,name,payload}=msg;
+
+    if(type==="hello"){
+      const isNew=!peerState.has(from);
+      peerState.set(from,payload||{name});
+      ensurePeer(from,name);
+      broadcastState(from);
+      if(isNew)SND.vcPeerJoin();
+      renderVoiceGrid();return;
+    }
+    if(type==="bye"){dropPeer(from);return}
+    if(type==="room-closed"){toast("Phòng voice đã được đóng bởi chủ phòng");return leave(true)}
+    if(type==="state"){
+      const prev=peerState.get(from)||{};
+      peerState.set(from,payload||{name});
+      if(!prev.scr&&payload?.scr)SND.vcStream();
+      if(focusKey&&focusKey.startsWith(from+":")&&!payload?.scr)focusKey=null;
+      renderVoiceGrid();return;
+    }
+    if(type==="ctrl"&&payload){
+      if(payload.target!==ME)return;
+      if(payload.act==="mute"){if(micOn){micOn=false;applyMic();SND.deny();toast("🔇 Chủ phòng đã tắt mic của bạn")}}
+      else if(payload.act==="uncam"){if(camOn){stopCam();SND.deny();toast("📷 Chủ phòng đã tắt camera của bạn")}}
+      else if(payload.act==="kick"){SND.deny();toast("🚫 Bạn đã bị kick khỏi phòng voice",1);leave(true)}
+      else if(payload.act==="dj-off"){if(musOn){musOn=false;musicInfo=null;renegotiateAll();broadcastState()}toast("♫ Quyền phát nhạc của bạn đã bị thu hồi");renderControls()}
+      else if(payload.act==="dj-on"){toast("♫ Bạn đã được cấp quyền phát nhạc trong phòng Voice!");renderControls()}
+      return;
+    }
+
+    const pObj=ensurePeer(from,name);if(!pObj)return;
+    const pc=pObj.pc;
+    if(type==="desc"){
+      const offerCollision=payload.type==="offer"&&(pObj.making||pc.signalingState!=="stable");
+      pObj.ignore=!pObj.polite&&offerCollision;
+      if(pObj.ignore)return;
+      try{
+        await pc.setRemoteDescription(payload);
+        if(payload.type==="offer"){await pc.setLocalDescription();sigSend("desc",pc.localDescription,from)}
+      }catch(_){}
+    }else if(type==="ice"){
+      try{await pc.addIceCandidate(payload)}catch(_){}
+    }
+  }
+
+  function renegotiateAll(){peers.forEach(pObj=>syncSenders(pObj))}
+  function applyMic(){
+    if(micStream)micStream.getAudioTracks().forEach(t=>t.enabled=micOn);
+    broadcastState();renderControls();renderVoiceGrid();
+  }
+  async function toggleMic(){
+    if(!vcId)return;
+    if(!micStream){
+      try{
+        micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+        localAn=attachAnalyser(micStream,"self");
+        renegotiateAll();
+      }catch(_){SND.deny();return toast("Không truy cập được Microphone",1)}
+    }
+    micOn=!micOn;SND.vcMic(micOn);applyMic();
+  }
+  function stopCam(){
+    camOn=false;
+    if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+    renegotiateAll();broadcastState();renderControls();renderVoiceGrid();
+  }
+  async function toggleCam(){
+    if(!vcId)return;
+    if(camOn){SND.vcCam(false);return stopCam()}
+    try{
+      camStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720}}});
+      camOn=true;SND.vcCam(true);
+      renegotiateAll();broadcastState();renderControls();renderVoiceGrid();
+    }catch(_){SND.deny();toast("Không truy cập được Camera",1)}
+  }
+  function stopScreen(){
+    scrOn=false;
+    if(focusKey==="self:scr")focusKey=null;
+    if(scrStream){scrStream.getTracks().forEach(t=>t.stop());scrStream=null}
+    renegotiateAll();broadcastState();renderControls();renderVoiceGrid();
+  }
+  async function toggleScreen(){
+    if(!vcId)return;
+    if(scrOn){return stopScreen()}
+    if(!navigator.mediaDevices?.getDisplayMedia)return toast("Trình duyệt không hỗ trợ chia sẻ màn hình",1);
+    try{
+      scrStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+      scrOn=true;SND.vcStream();
+      scrStream.getVideoTracks()[0].onended=()=>stopScreen();
+      renegotiateAll();broadcastState();renderControls();renderVoiceGrid();
+    }catch(_){}
+  }
+  function toggleDeafen(){
+    deafOn=!deafOn;SND.vcDeafen(deafOn);
+    peers.forEach(pObj=>pObj.audios.forEach(a=>a.muted=deafOn));
+    broadcastState();renderControls();
+  }
+
+  function onMusicPlay(plId,trId){
+    if(!vcId||!canMusic())return;
+    const pl=PLAYLISTS.find(p=>p.id===plId),tr=pl&&pl.tracks.find(t=>t.id===trId);
+    if(!pl||!tr)return;
+    musOn=true;musicInfo={plName:pl.name,plLogo:pl.logo||"",trName:tr.name};
+    renegotiateAll();broadcastState();renderVoiceGrid();
+  }
+  function onMusicStop(){
+    if(!vcId||!musOn)return;
+    musOn=false;musicInfo=null;
+    renegotiateAll();broadcastState();renderVoiceGrid();
+  }
+
+  function renderControls(){
+    const mb=$("vcMicBtn"),cb=$("vcCamBtn"),db=$("vcDeafBtn"),sb=$("vcScrBtn"),msb=$("vcMusBtn"),mm=$("vcMiniMic");
+    if(mb){mb.textContent=micOn?"🎤 Mic":"🔇 Mic";mb.className="vc-btn "+(micOn?"on":"off")}
+    if(mm){mm.textContent=micOn?"🎤":"🔇";mm.className="mini "+(micOn?"g":"r")}
+    if(cb){cb.textContent=camOn?"📹 Cam":"📷 Cam";cb.className="vc-btn "+(camOn?"on":"off")}
+    if(db){db.textContent=deafOn?"🔇 Loa":"🎧";db.className="vc-btn"+(deafOn?" off":"")}
+    if(sb){sb.textContent=scrOn?"⏹ Dừng Share":"🖥 Share";sb.className="vc-btn"+(scrOn?" on":"")}
+    if(msb){msb.hidden=!canMusic();msb.className="vc-btn"+(musOn?" on":"")}
+    const rm=roomData();
+    if($("vcRoleLbl"))$("vcRoleLbl").textContent=rm?(isHost()?"★ Chủ phòng":canMusic()?"♫ DJ":"Thành viên"):"";
+  }
+
+  function openMemberMenu(targetName,x,y){
+    if(!isHost()||targetName===ME)return;
+    closeCtx();
+    const rm=roomData(),isDj=(rm?.dj||[]).includes(targetName);
+    vcCtxPop=document.createElement("div");vcCtxPop.className="pl-pop";
+    vcCtxPop.innerHTML=`
+      <button type="button" data-va="mute">🔇 Cưỡng ép tắt Mic</button>
+      <button type="button" data-va="uncam">📷 Cưỡng ép tắt Camera</button>
+      <button type="button" data-va="${isDj?"dj-off":"dj-on"}">${isDj?"♫ Tước quyền phát nhạc":"♫ Cấp quyền phát nhạc"}</button>
+      <button type="button" class="r" data-va="kick">🚫 Kick khỏi Voice</button>`;
+    document.body.appendChild(vcCtxPop);
+    vcCtxPop.style.top=Math.min(innerHeight-vcCtxPop.offsetHeight-8,Math.max(8,y))+"px";
+    vcCtxPop.style.left=Math.min(innerWidth-vcCtxPop.offsetWidth-8,Math.max(8,x))+"px";
+    vcCtxPop.onclick=e=>{
+      const actName=e.target.dataset.va;if(!actName)return;closeCtx();
+      const doc=noteDoc();if(!doc)return;
+      if(actName==="dj-on"||actName==="dj-off"){
+        const djs=new Set(doc.data.voice.dj||[]);
+        if(actName==="dj-on")djs.add(targetName);else djs.delete(targetName);
+        doc.data.voice.dj=[...djs];Store.put(doc);
+      }else if(actName==="kick"){
+        const b=new Set(doc.data.voice.banned||[]);b.add(targetName);
+        doc.data.voice.banned=[...b];Store.put(doc);
+      }
+      peerState.forEach((ps,pid)=>{if(ps.name===targetName)sigSend("ctrl",{target:targetName,act:actName},pid)});
+      toast(`Đã gửi lệnh tới ${targetName}`);
+    };
+  }
+
+  function renderVoiceGrid(){
+    const rm=roomData(),grid=$("vcGrid");if(!grid||!vcId)return;
+    const totalPeers=1+peerState.size,maxLbl=rm&&rm.max>0?rm.max:"∞";
+    if($("vcTitle"))$("vcTitle").textContent=rm?rm.name:"Voice Room";
+    if($("vcCount"))$("vcCount").textContent=`· ${totalPeers}/${maxLbl}`;
+    if($("vcMiniName"))$("vcMiniName").textContent=rm?rm.name:"Voice";
+
+    // Render âm thanh nền cho tất cả remote peers (mic + bot + stream audio)
+    peers.forEach((pObj,pid)=>{
+      const pst=peerState.get(pid)||{};
+      pObj.streams.forEach((st,sid)=>{
+        if(!st.getAudioTracks().length)return;
+        if(sid===pst.camId)return;
+        let a=pObj.audios.get(sid);
+        if(!a){
+          a=new Audio();a.autoplay=true;a.srcObject=st;
+          pObj.audios.set(sid,a);
+        }
+        a.muted=deafOn;
+        if(sid===pst.botId)a.volume=botVols.has(pid)?botVols.get(pid):.65;
+        else a.volume=1;
+        a.play().catch(()=>{});
+      });
+    });
+
+    const cards=[];
+    // 1) Thẻ của chính mình
+    cards.push({kind:"user",key:"self",name:ME,mic:micOn,cam:camOn,stream:camOn?camStream:null,self:true});
+    if(scrOn&&scrStream)cards.push({kind:"stream",key:"self:scr",owner:ME,stream:scrStream});
+    if(musOn&&musicInfo)cards.push({kind:"bot",key:"self:bot",owner:ME,music:musicInfo,self:true});
+
+    // 2) Thẻ của các thành viên khác
+    peerState.forEach((pst,pid)=>{
+      const pObj=peers.get(pid),camSt=pObj&&pst.camId?pObj.streams.get(pst.camId):null;
+      const scrSt=pObj&&pst.scrId?pObj.streams.get(pst.scrId):null;
+      cards.push({kind:"user",key:pid,name:pst.name||"Member",mic:!!pst.mic,cam:!!pst.cam,stream:pst.cam?camSt:null,self:false});
+      if(pst.scr)cards.push({kind:"stream",key:pid+":scr",owner:pst.name||"Member",stream:scrSt});
+      if(pst.music)cards.push({kind:"bot",key:pid+":bot",pid,owner:pst.name||"Member",music:pst.music,self:false});
+    });
+
+    // Stream đang phóng to
+    const focusCard=focusKey?cards.find(c=>c.kind==="stream"&&c.key===focusKey):null;
+    const fBox=$("vcFocus"),fVid=$("vcFocusVid");
+    if(focusCard&&focusCard.stream){
+      fBox.hidden=false;$("vcFocusLbl").textContent=`🖥 ${focusCard.owner}'s Stream`;
+      if(fVid.srcObject!==focusCard.stream){fVid.srcObject=focusCard.stream;fVid.muted=(focusCard.owner===ME||deafOn);fVid.play().catch(()=>{})}
+    }else{fBox.hidden=true;fVid.srcObject=null}
+
+    grid.innerHTML=cards.map(c=>{
+      if(c.kind==="user"){
+        const hostTag=rm&&rm.by===c.name?" ★":"";
+        const menuBtn=(isHost()&&!c.self)?`<button class="vc-tile-menu" type="button" data-vcm="${esc(c.name)}">⋮</button>`:"";
+        return`<div class="vc-tile${speaking.has(c.key)?" speaking":""}" data-spk="${esc(c.key)}" data-u="${esc(c.name)}" style="--vc-bg:${tileColor(c.name)}">
+          ${menuBtn}
+          ${c.cam&&c.stream?`<video class="vc-cam" data-vkey="${esc(c.key)}" autoplay playsinline muted></video>`:`<div class="vc-av-wrap"><span class="vc-av"${avStyle(U(c.name))}></span></div>`}
+          <div class="vc-tag"><span>${c.mic?"🎤":"🔇"} ${esc(c.name)}${hostTag}</span></div>
+        </div>`;
+      }
+      if(c.kind==="stream"){
+        return`<div class="vc-tile stream" data-watch="${esc(c.key)}">
+          <div class="vc-av-wrap" style="text-align:center;gap:6px"><span style="font-size:28px">🖥</span><span class="btn pri" style="font-size:11.5px">${focusKey===c.key?"Đang xem":"▶ Xem Stream"}</span></div>
+          <div class="vc-tag"><span>🖥 ${esc(c.owner)}'s Stream</span></div>
+        </div>`;
+      }
+      const volPct=c.self?(THEME.bgmVol??65):Math.round((botVols.has(c.pid)?botVols.get(c.pid):.65)*100);
+      return`<div class="vc-tile bot" style="--vc-bg:radial-gradient(circle at 50% 35%,rgba(var(--g-rgb),.26),#070c14)">
+        <div class="vc-av-wrap"><span class="vc-av">${c.music.plLogo?`<img src="${c.music.plLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:"♫"}</span></div>
+        <div class="vc-tag"><span>♫ ${esc(c.music.plName)} · ${esc(c.music.trName)}</span></div>
+        ${c.self?"":`<label class="vc-tile-vol" title="Âm lượng nhạc phòng">🔊<input type="range" min="0" max="100" value="${volPct}" data-bvol="${esc(c.pid)}"></label>`}
+      </div>`;
+    }).join("");
+
+    // Gắn MediaStream cho các camera tile
+    cards.filter(c=>c.kind==="user"&&c.cam&&c.stream).forEach(c=>{
+      const v=grid.querySelector(`video[data-vkey="${CSS.escape(c.key)}"]`);
+      if(v&&v.srcObject!==c.stream){v.srcObject=c.stream;v.play().catch(()=>{})}
+    });
+    // Chuột phải (PC) hoặc nút ⋮ (Mobile) để Host quản lý thành viên
+    qsa(".vc-tile[data-u]",grid).forEach(t=>{
+      t.oncontextmenu=e=>{if(isHost()&&t.dataset.u!==ME){e.preventDefault();openMemberMenu(t.dataset.u,e.clientX,e.clientY)}};
+      const mb=t.querySelector("[data-vcm]");
+      if(mb)mb.onclick=e=>{e.stopPropagation();const r=mb.getBoundingClientRect();openMemberMenu(mb.dataset.vcm,r.right-140,r.bottom+4)};
+    });
+    qsa("[data-watch]",grid).forEach(t=>t.onclick=()=>{focusKey=focusKey===t.dataset.watch?null:t.dataset.watch;renderVoiceGrid()});
+    qsa("[data-bvol]",grid).forEach(inp=>inp.oninput=()=>{
+      const pid=inp.dataset.bvol,v=+inp.value/100;botVols.set(pid,v);
+      const pObj=peers.get(pid),pst=peerState.get(pid);
+      if(pObj&&pst?.botId){const a=pObj.audios.get(pst.botId);if(a)a.volume=v}
+    });
+  }
+
+  function restoreChatParent(){
+    const term=$("term"),ops=$("pg-ops");
+    if(term&&ops&&term.parentElement!==ops){
+      ops.appendChild(term);
+      term.style.height="";term.style.border="";term.style.borderRadius="";
+      if($("tExp"))$("tExp").hidden=false;
+    }
+    withChat=false;$("vcOverlay").classList.remove("with-chat");
+  }
+
+  async function join(id){
+    if(!member())return toast("Chỉ thành viên mới có thể tham gia voice",1);
+    const d=Store.get(id),vc=d?.data?.voice;
+    if(!vc)return;
+    const expired=vc.emptyAt&&Date.now()-vc.emptyAt>=30000;
+    if(vc.status==="closed"||expired){
+      if(vc.status!=="closed"){vc.status="closed";Store.put(d)}
+      SND.deny();return toast("Phòng voice này đã đóng (CLOSED)",1);
+    }
+    if((vc.banned||[]).includes(ME)){SND.deny();return toast("Bạn đã bị kick khỏi phòng này",1)}
+    const curCnt=Store.voicePeers(vc.id).length;
+    if(vc.max>0&&curCnt>=vc.max&&vcId!==vc.id){SND.deny();return toast(`Phòng đã đầy (${curCnt}/${vc.max})`,1)}
+
+    if(vcId&&vcId!==vc.id)await leave(true);
+    if(vcId===vc.id){openOverlay();return}
+
+    noteId=id;vcId=vc.id;myPeerId=ME+"_"+Store.tabId();
+    micOn=false;camOn=false;deafOn=false;scrOn=false;musOn=false;musicInfo=null;focusKey=null;
+    if(vc.emptyAt!=null){vc.emptyAt=null;Store.put(d)}
+
+    try{
+      micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      micStream.getAudioTracks().forEach(t=>t.enabled=false);
+      localAn=attachAnalyser(micStream,"self");
+    }catch(_){
+      micStream=null;toast("Không có Mic — đã vào chế độ chỉ nghe");
+    }
+
+    Store.track(ME,undefined,vcId);
+    const sb=Store.client();
+    if(sb){
+      chan=sb.channel("voice:"+vcId,{config:{broadcast:{self:false}}})
+        .on("broadcast",{event:"sig"},({payload})=>onSig(payload))
+        .subscribe(s=>{if(s==="SUBSCRIBED")sigSend("hello",myStatePayload())});
+    }else if("BroadcastChannel" in window){
+      bc=new BroadcastChannel("gg_vc_"+vcId);
+      bc.onmessage=e=>onSig(e.data);
+      sigSend("hello",myStatePayload());
+    }
+
+    SND.vcJoin();
+    startSpeakingLoop();
+    openOverlay();
+    renderControls();renderVoiceGrid();
+  }
+
+  function openOverlay(){
+    if(!vcId)return;
+    openUI=true;$("vcOverlay").hidden=false;$("vcMini").hidden=true;
+    renderControls();renderVoiceGrid();
+  }
+  function minimize(){
+    if(!vcId)return;
+    openUI=false;closeCtx();restoreChatParent();
+    $("vcOverlay").hidden=true;$("vcMini").hidden=false;
+    renderControls();renderVoiceGrid();
+  }
+  async function leave(silent,closeRoom){
+    if(!vcId)return;
+    const d=noteDoc();
+    if(closeRoom&&d&&isHost()){
+      sigSend("room-closed",{});
+      d.data.voice.status="closed";Store.put(d);
+    }else if(d&&d.data.voice.status==="open"){
+      const rem=Store.voicePeers(vcId).filter(n=>n!==ME).length;
+      if(rem===0){d.data.voice.emptyAt=Date.now();Store.put(d)}
+    }
+    sigSend("bye",{});
+    if(chan){try{chan.unsubscribe()}catch(_){}chan=null}
+    if(bc){try{bc.close()}catch(_){}bc=null}
+    clearInterval(spkTimer);spkTimer=0;localAn=null;
+    if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null}
+    if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+    if(scrStream){scrStream.getTracks().forEach(t=>t.stop());scrStream=null}
+    peers.forEach((_,pid)=>dropPeer(pid));
+    peers.clear();peerState.clear();speaking.clear();
+    micOn=false;camOn=false;scrOn=false;musOn=false;musicInfo=null;focusKey=null;
+    noteId=null;vcId=null;openUI=false;
+    restoreChatParent();closeCtx();
+    $("vcOverlay").hidden=true;$("vcMini").hidden=true;
+    Store.track(ME,undefined,null);
+    if(!silent)SND.vcLeave();
+  }
+
+  function init(){
+    $("vcMicBtn").onclick=toggleMic;
+    $("vcMiniMic").onclick=toggleMic;
+    $("vcCamBtn").onclick=toggleCam;
+    $("vcDeafBtn").onclick=toggleDeafen;
+    $("vcScrBtn").onclick=toggleScreen;
+    $("vcMusBtn").onclick=()=>{if(!canMusic())return;minimize();go("playlist");toast("Chọn Playlist và bấm Play để phát vào phòng Voice")};
+    $("vcExitBtn").onclick=minimize;
+    $("vcMiniBack").onclick=openOverlay;
+    $("vcMiniLeave").onclick=()=>$("vcHangBtn").click();
+    $("vcFocusClose").onclick=()=>{focusKey=null;renderVoiceGrid()};
+    $("vcChatBtn").onclick=()=>{
+      withChat=!withChat;$("vcOverlay").classList.toggle("with-chat",withChat);
+      const term=$("term");
+      if(withChat){
+        $("vcChatSlot").appendChild(term);
+        term.style.height="100%";term.style.border="0";term.style.borderRadius="0";
+        if($("tExp"))$("tExp").hidden=true;
+      }else{restoreChatParent()}
+    };
+    $("vcHangBtn").onclick=()=>{
+      if(!isHost())return leave(false,false);
+      modal("thoát phòng voice",`<div class="fm">
+<div class="dim" style="font-size:12.5px">Bạn là chủ phòng. Bạn muốn giữ phòng mở hay đóng vĩnh viễn phòng này?</div>
+<div class="acts" style="justify-content:space-between">
+  <button class="btn" id="vhKeep" type="button">Thoát khỏi voice</button>
+  <button class="btn dng" id="vhClose" type="button">Thoát &amp; Đóng voice</button>
+</div></div>`,()=>{
+        $("vhKeep").onclick=()=>{closeModal();leave(false,false)};
+        $("vhClose").onclick=()=>{closeModal();leave(false,true)};
+      });
+    };
+  }
+  return{
+    init,join,leave,minimize,onMusicPlay,onMusicStop,
+    isOpen:()=>openUI,
+    roomNoteId:()=>noteId,
+    onRoomSync:()=>{if(vcId){renderControls();renderVoiceGrid()}}
+  };
+})();
 Store.on((doc,src,del)=>{
   if(!READY)return;
   if(doc.kind==="log"&&src==="remote"&&!del&&doc.data&&doc.data.who!==ME){
@@ -3707,6 +5027,7 @@ Store.on((doc,src,del)=>{
   }
   if(doc.kind==="user"&&del&&doc.data&&doc.data.name===ME){LS.del("gg_sess");location.reload();return}
   if((doc.kind==="pad"||doc.kind==="presence")&&onPadSync)onPadSync(doc);
+  if(doc.kind==="note"||doc.kind==="presence")Voice.onRoomSync();
   renderAll();
 });
 document.addEventListener("click",e=>{
@@ -3716,9 +5037,9 @@ document.addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{
   const t=e.target;if(t&&t.matches&&t.matches("input,textarea")&&(e.key.length===1||e.key==="Backspace"||e.key==="Enter"))SND.key(e.key==="Enter");
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"&&READY&&!introOn){e.preventDefault();return openCmdPalette()}
-  if(e.key==="Escape"){if(!$("modal").hidden)closeModal();else if(introOn)endIntro()}
+  if(e.key==="Escape"){if(!$("modal").hidden)closeModal();else if(Voice.isOpen())Voice.minimize();else if(introOn)endIntro()}
   if(!READY||introOn||!$("modal").hidden||(t&&t.matches&&t.matches("input,textarea,select")))return;
-  const k={"1":"ops","2":"board","3":"team","4":"profile"}[e.key];if(k&&!e.ctrlKey&&!e.metaKey&&!e.altKey)go(k);
+  const k={"1":"ops","2":"board","3":"team","4":"profile","5":"playlist"}[e.key];if(k&&!e.ctrlKey&&!e.metaKey&&!e.altKey)go(k);
 },true);
 qsa("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 let NEED_PW_RESET=false;
@@ -3737,10 +5058,11 @@ let rzT=0;addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{a
 
 sizeRain();addEventListener("resize",sizeRain);
 setInterval(tick,70);
-initFX();initTools();initTerm();renderClock();
+initFX();initTools();initTerm();Voice.init();renderClock();
 setInterval(()=>{renderClock();if(READY)renderNext()},250);
 setInterval(sysTick,1500);sysTick();pingAll();setInterval(pingAll,20000);
 setInterval(()=>{if(READY&&PAGE==="ops"){renderList();renderStats();renderLineup()}if(READY){renderEvStatus();checkShifts()}},60000);
+setInterval(sweepVoiceRooms,5000);
 initTicker();
 Lock.boot();
 
