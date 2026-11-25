@@ -1678,7 +1678,14 @@ const Store=(()=>{
         sb=createClient(CFG.SUPABASE_URL,CFG.SUPABASE_KEY,{realtime:{params:{eventsPerSecond:20}}});
         const {data}=await sb.auth.getSession();
         authUser=data?.session?.user||null;
-        if(authUser){await loadSupabaseAll();subscribeSupabase()}
+        if(authUser){
+          try{await loadSupabaseAll();subscribeSupabase()}
+          catch(loadErr){
+            console.warn("Reset session cũ:",loadErr);
+            try{await sb.auth.signOut()}catch(_){}
+            authUser=null;docs.clear();
+          }
+        }
         mode="supabase";return mode;
       }catch(e){console.warn("Supabase lỗi, chuyển sang local:",e);toast("⚠ Không kết nối được Supabase — dùng chế độ local",1)}
     }
@@ -1765,10 +1772,11 @@ const Store=(()=>{
     const email=String(handle||"").trim().toLowerCase()+"@gg.local";
     const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{handle:String(handle||"").trim(),invite,gate}}});
     if(error)throw error;
+    if(!data?.session)throw new Error("Hãy tắt 'Confirm email' trong Supabase Auth → Providers → Email");
     authUser=data.user;await loadSupabaseAll();subscribeSupabase();return authUser;
   }
   async function signOut(){
-    if(mode==="supabase"&&sb){try{await sb.auth.signOut()}catch(_){}}
+    if(mode==="supabase"&&sb){try{await sb.auth.signOut({scope:"local"})}catch(_){}}
     authUser=null;docs.clear();
   }
   async function updatePassword(newPw){
@@ -1785,6 +1793,17 @@ const Store=(()=>{
     if(mode!=="supabase"||!sb)return;
     const {error}=await sb.rpc("admin_delete_member",{target_id:targetAuthId});
     if(error)throw error;
+  }
+  async function verifyRecovery(token){
+    if(mode!=="supabase"||!sb)return false;
+    try{const {data,error}=await sb.rpc("verify_root_recovery",{token});return !error&&data===true}
+    catch(e){return false}
+  }
+  async function recoverRootPassword(token,newPw){
+    if(mode!=="supabase"||!sb)throw new Error("Chỉ hỗ trợ khi kết nối Supabase");
+    const {data,error}=await sb.rpc("recover_root_password",{token,new_password:newPw});
+    if(error)throw error;
+    return data;
   }
   function setLocal(doc){docs.set(doc.id,doc);emit(doc,"self",false);if(mode!=="supabase")saveLocal()}
 
@@ -1826,7 +1845,7 @@ const Store=(()=>{
   return{
     init,put,putAsync,del,setLocal,all,get:id=>docs.get(id),on:f=>subs.add(f),mode:()=>mode,
     authUid:()=>authUser?authUser.id:null,reloadAll:loadSupabaseAll,
-    verifyGate,signIn,signUp,signOut,updatePassword,changeSecrets,deleteMember,
+    verifyGate,signIn,signUp,signOut,updatePassword,changeSecrets,deleteMember,verifyRecovery,recoverRootPassword,
     uploadFile,signedUrl,removeFile,client:()=>sb,tabId:()=>TAB,
     track(n,chId,vcId){me=n;if(chId!==undefined)focus=chId||null;if(vcId!==undefined)vcRoom=vcId||null;if(mode==="supabase"&&ch)ch.track({n:me,ch:focus,vc:vcRoom}).catch(()=>{});else{hb();emit({id:"~presence",kind:"presence"},"self")}},
     online(){return new Set(states().map(x=>x.n).filter(Boolean))},
@@ -2500,7 +2519,7 @@ function sweepVoiceRooms(){
 // --- số liệu hệ thống ---
 const SYS={cpu:[],ram:[],net:[],cv:22,rv:46,nv:0,t0:Date.now(),ping:{},pk:0};
 const NODES=[["CTFTIME","https://ctftime.org/favicon.ico"],["CF-EDGE","https://www.cloudflare.com/favicon.ico"],["GOOGLE","https://www.google.com/generate_204"],["GITHUB","https://github.githubassets.com/favicon.ico"]];
-if(CFG.SUPABASE_URL)NODES.push(["SUPABASE",CFG.SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/"+CFG.TABLE+"?select=id&limit=1"]);
+if(CFG.SUPABASE_URL)NODES.push(["SUPABASE",CFG.SUPABASE_URL.replace(/\/$/,"")+"/auth/v1/settings"]);
 async function pingAll(){
   for(const [k,u] of NODES){
     const t=performance.now();
@@ -4537,7 +4556,7 @@ const Lock=(()=>{
   const line=(h,c)=>{const d=document.createElement("div");d.className="ln "+(c||"");d.innerHTML=h;B.appendChild(d);B.scrollTop=B.scrollHeight;return d};
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   async function type(text,c,sp){const d=line("",c);for(let i=1;i<=text.length;i+=2){d.textContent=text.slice(0,i);if(i%6===1)SND.chirp();await wait(sp||9)}d.textContent=text;return d}
-  function ask(pr,kind){step=kind;P.textContent=pr;I.type=/pass|pw|inv/.test(kind)?"password":"text";I.value="";I.disabled=false;I.focus()}
+  function ask(pr,kind){step=kind;P.textContent=pr;I.type=/pass|pw|inv|rec/.test(kind)?"password":"text";I.value="";I.disabled=false;I.focus()}
   function deny(m){line(m,"er");LKX.classList.remove("shake","deny");void LKX.offsetWidth;LKX.classList.add("shake","deny");setTimeout(()=>LKX.classList.remove("deny"),900);SND.deny()}
   function opts(list){const d=line('<div class="lko">'+list.map(o=>`<button type="button" data-v="${o[0]}"><b>[${o[0]}]</b>${o[1]}</button>`).join("")+"</div>");d.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(!busy)handle(b.dataset.v)})}
 
@@ -4576,7 +4595,7 @@ const Lock=(()=>{
   }
   async function handle(v){
     if(busy)return;const raw=String(v),val=raw.trim();busy=true;I.disabled=true;
-    const echo=/pass|pw|inv/.test(step)?"•".repeat(raw.length||1):esc(raw);
+    const echo=/pass|pw|inv|rec/.test(step)?"•".repeat(raw.length||1):esc(raw);
     if(step!=="boot")line(`<span class="dm">${esc(P.textContent)}</span> ${echo}`);
     try{
     switch(step){
@@ -4599,7 +4618,40 @@ const Lock=(()=>{
       case"user":
         if(val==="back"){menu();break}
         if(!val){ask("username:","user");break}
+        if(/^LEADER:(--5h4rk--|#?5H4RK)$/i.test(val)){
+          if(Store.mode()!=="supabase"){deny("✖ khôi phục LEADER chỉ khả dụng khi kết nối Supabase");ask("username:","user");break}
+          line("› kích hoạt giao thức khôi phục tài khoản ROOT","cy");
+          ask("recovery key:","rec");break;
+        }
         tmp.user=val;ask("password:","pw");break;
+      case"rec":{
+        if(val==="back"){menu();break}
+        if(await Store.verifyRecovery(raw)){
+          tmp.recKey=raw;
+          line("✔ recovery key hợp lệ — đặt mật khẩu mới cho ROOT","ok");SND.ok();
+          ask("mật khẩu root mới (≥ 6 ký tự):","rec_pw1");
+        }else{
+          deny("✖ recovery key không đúng");
+          line('gõ <b>back</b> để quay lại menu',"dm");
+          ask("recovery key:","rec");
+        }
+        break}
+      case"rec_pw1":
+        if(raw.length<6){line("mật khẩu quá ngắn (tối thiểu 6 ký tự)","er");ask("mật khẩu root mới (≥ 6 ký tự):","rec_pw1");break}
+        tmp.pw=raw;ask("nhập lại mật khẩu mới:","rec_pw2");break;
+      case"rec_pw2":{
+        if(raw!==tmp.pw){line("✖ hai lần nhập không khớp","er");ask("mật khẩu root mới (≥ 6 ký tự):","rec_pw1");break}
+        try{
+          const rootName=await Store.recoverRootPassword(tmp.recKey,tmp.pw);
+          await Store.signIn(rootName,tmp.pw);
+          tmp.recKey=null;tmp.pw=null;
+          await finish(rootName,"recovery");
+        }catch(err){
+          tmp.recKey=null;tmp.pw=null;
+          deny("✖ "+(err.message||"Không thể khôi phục mật khẩu"));
+          menu();
+        }
+        break}
       case"pw":{
         if(Store.mode()==="supabase"){
           try{
@@ -4663,7 +4715,7 @@ const Lock=(()=>{
     line("");line(name?`✔ ACCESS GRANTED · chào mừng, <b>${esc(name)}</b>`:"✔ truy cập chế độ khách · chỉ xem công khai","ok");SND.grant();
     if(name){
       await fetchNetInfo(600);
-      act("login",how==="new"?`<b>${esc(name)}</b> gia nhập căn cứ — chào mừng agent mới`:`<b>${esc(name)}</b> đã đăng nhập vào căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});
+      act("login",how==="new"?`<b>${esc(name)}</b> gia nhập căn cứ — chào mừng agent mới`:how==="recovery"?`<b>${esc(name)}</b> đăng nhập qua giao thức khôi phục`:`<b>${esc(name)}</b> đã đăng nhập vào căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});
     }
     await wait(900);
     $("lock").classList.add("out");SND.crt();
