@@ -1365,8 +1365,8 @@ body.lite-fx .page.on,body.lite-fx .mbox,body.lite-fx #vcOverlay:not([hidden]),b
 // =====================================================================
 const CFG={
   TEAM_ID:456477,
-  LOCK_PASS:"green", LOCK_HINT:"Still -----, soon rotting.",          // passphrase màn hình khóa
-  INVITE:"",                              // mã mời mặc định (leader đổi được ở tab Đội → quản trị)
+  LOCK_PASS:"", LOCK_HINT:"Still -----, soon rotting.",               // kiểm tra trên server Supabase qua verify_gate()
+  INVITE:"",                              // kiểm tra trên server Supabase khi signUp
   LEADER:["--5h4rk--"],                           // leader của team (đổi ở đây sẽ áp dụng lại cho dữ liệu đã có)
   // --- Realtime: điền Supabase để mọi người thấy thay đổi ngay lập tức (xem hướng dẫn SQL ở cuối file).
   //     Để trống = chế độ local: lưu trên trình duyệt này, đồng bộ realtime giữa các tab.
@@ -1589,28 +1589,96 @@ const SND=(()=>{
 //  KHO DỮ LIỆU REALTIME
 // =====================================================================
 const Store=(()=>{
-  const docs=new Map(),subs=new Set(),TAB=rid(),peers=new Map(),LK="gg_hub_v2";
-  let mode="local",sb=null,ch=null,bc=null,me=null,focus=null,vcRoom=null,sbStates=[];
+  const docs=new Map(),subs=new Set(),TAB=rid(),peers=new Map(),LK="gg_hub_v2",signedCache=new Map();
+  let mode="local",sb=null,ch=null,bc=null,me=null,focus=null,vcRoom=null,sbStates=[],authUser=null;
   const emit=(doc,src,del)=>subs.forEach(f=>{try{f(doc,src,del)}catch(e){console.error(e)}});
   const saveLocal=()=>LS.set(LK,[...docs.values()]);
+  const TBL={user:"profiles",chal:"challenges",note:"notes",evt:"events",log:"logs",pad:"pads"};
+
+  function rowToDoc(table,row){
+    if(!row)return null;
+    if(table==="profiles")return{
+      id:"u:"+String(row.name||"").toLowerCase(),
+      kind:"user",
+      ts:+row.seen||Date.now(),
+      data:{
+        authId:row.id,name:row.name,accId:row.acc_id,roles:row.roles||[],root:!!row.is_root,
+        ctf:row.ctf||null,skills:row.skills||[],avail:row.avail||"",bio:row.bio||"",
+        av:row.av||null,avPath:row.av_path||null,act:row.act||{},seen:+row.seen||0,
+        order:row.sort_order??99,h:true
+      }
+    };
+    if(table==="challenges")return{id:row.id,kind:"chal",ts:+row.ts||0,data:Object.assign({},row.data,{ev:+row.ev||0,createdBy:row.created_by})};
+    if(table==="notes")return{id:row.id,kind:"note",ts:+row.ts||0,data:Object.assign({},row.data,{authorId:row.author_id})};
+    if(table==="events")return{id:row.id,kind:"evt",ts:+row.ts||0,data:row.data||{}};
+    if(table==="logs")return{id:row.id,kind:"log",ts:+row.ts||0,data:Object.assign({},row.data,{actorId:row.actor_id})};
+    if(table==="pads")return{id:row.id,kind:"pad",ts:+row.ts||0,data:Object.assign({},row.data,{updatedBy:row.updated_by})};
+    return null;
+  }
+
   function apply(doc,del,src){
     if(!doc||!doc.id)return;
     if(del){if(!docs.has(doc.id))return;const old=docs.get(doc.id);docs.delete(doc.id);emit(old,src,true);return}
     const cur=docs.get(doc.id);if(cur&&cur.ts>doc.ts)return;
     docs.set(doc.id,doc);emit(doc,src,false);
   }
+
+  async function loadSupabaseAll(){
+    if(!sb||!authUser)return;
+    const [p,c,n,e,l,pd]=await Promise.all([
+      sb.from("profiles").select("*"),
+      sb.from("challenges").select("*"),
+      sb.from("notes").select("*"),
+      sb.from("events").select("*"),
+      sb.from("logs").select("*").order("ts",{ascending:false}).limit(1000),
+      sb.from("pads").select("*")
+    ]);
+    [p,c,n,e,l,pd].forEach(r=>{if(r.error)throw r.error});
+    docs.clear();
+    p.data.forEach(r=>{const d=rowToDoc("profiles",r);if(d)docs.set(d.id,d)});
+    c.data.forEach(r=>{const d=rowToDoc("challenges",r);if(d)docs.set(d.id,d)});
+    n.data.forEach(r=>{const d=rowToDoc("notes",r);if(d)docs.set(d.id,d)});
+    e.data.forEach(r=>{const d=rowToDoc("events",r);if(d)docs.set(d.id,d)});
+    l.data.forEach(r=>{const d=rowToDoc("logs",r);if(d)docs.set(d.id,d)});
+    pd.data.forEach(r=>{const d=rowToDoc("pads",r);if(d)docs.set(d.id,d)});
+  }
+
+  function onDbChange(table,pl){
+    if(pl.eventType==="DELETE"){
+      if(table==="profiles"){
+        let victim=null;docs.forEach(d=>{if(d.kind==="user"&&d.data.authId===pl.old?.id)victim=d});
+        if(victim)apply(victim,true,"remote");
+        return;
+      }
+      if(pl.old?.id)apply({id:pl.old.id},true,"remote");
+      return;
+    }
+    const doc=rowToDoc(table,pl.new);
+    if(doc)apply(doc,false,"remote");
+  }
+
+  function subscribeSupabase(){
+    if(!sb)return;
+    if(ch){try{ch.unsubscribe()}catch(_){}ch=null}
+    ch=sb.channel("hub-rt",{config:{presence:{key:TAB}}});
+    ["profiles","challenges","notes","events","logs","pads"].forEach(t=>{
+      ch.on("postgres_changes",{event:"*",schema:"public",table:t},pl=>onDbChange(t,pl));
+    });
+    ch.on("presence",{event:"sync"},()=>{
+      const st=ch.presenceState();
+      sbStates=Object.values(st).flat().filter(x=>x&&x.n);
+      emit({id:"~presence",kind:"presence"},"remote");
+    }).subscribe(s=>{if(s==="SUBSCRIBED"&&me)ch.track({n:me,ch:focus,vc:vcRoom})});
+  }
+
   async function init(){
     if(CFG.SUPABASE_URL&&CFG.SUPABASE_KEY){
       try{
         const {createClient}=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
         sb=createClient(CFG.SUPABASE_URL,CFG.SUPABASE_KEY,{realtime:{params:{eventsPerSecond:20}}});
-        const a=await sb.from(CFG.TABLE).select("*").neq("kind","log");if(a.error)throw a.error;
-        const b=await sb.from(CFG.TABLE).select("*").eq("kind","log").order("ts",{ascending:false}).limit(1000);if(b.error)throw b.error;
-        [...a.data,...b.data].forEach(d=>docs.set(d.id,d));
-        ch=sb.channel("hub-rt",{config:{presence:{key:TAB}}})
-          .on("postgres_changes",{event:"*",schema:"public",table:CFG.TABLE},pl=>{pl.eventType==="DELETE"?apply(pl.old,true,"remote"):apply(pl.new,false,"remote")})
-          .on("presence",{event:"sync"},()=>{const st=ch.presenceState();sbStates=Object.values(st).flat().filter(x=>x&&x.n);emit({id:"~presence",kind:"presence"},"remote")})
-          .subscribe(s=>{if(s==="SUBSCRIBED"&&me)ch.track({n:me,ch:focus,vc:vcRoom})});
+        const {data}=await sb.auth.getSession();
+        authUser=data?.session?.user||null;
+        if(authUser){await loadSupabaseAll();subscribeSupabase()}
         mode="supabase";return mode;
       }catch(e){console.warn("Supabase lỗi, chuyển sang local:",e);toast("⚠ Không kết nối được Supabase — dùng chế độ local",1)}
     }
@@ -1626,34 +1694,52 @@ const Store=(()=>{
     }else addEventListener("storage",e=>{if(e.key===LK){LS.get(LK,[]).forEach(d=>apply(d,false,"remote"))}});
     return mode;
   }
+
   function hb(){if(bc&&me)bc.postMessage({t:"hb",tab:TAB,n:me,ch:focus,vc:vcRoom})}
+
+  async function writeRemote(doc,existed){
+    if(mode!=="supabase"||!sb||!authUser)return;
+    const d=doc.data||{};let r={error:null};
+    if(doc.kind==="user"){
+      if(!d.authId)return;
+      const patch={name:d.name,ctf:d.ctf||null,skills:d.skills||[],avail:d.avail||"",bio:d.bio||"",av:d.av||null,av_path:d.avPath||null,act:d.act||{},seen:d.seen||0,sort_order:d.order??99};
+      if(isLeader())patch.roles=d.roles||[];
+      r=await sb.from("profiles").update(patch).eq("id",d.authId);
+    }else if(doc.kind==="chal"){
+      r=existed?await sb.from("challenges").update({ev:+d.ev||0,data:d,ts:doc.ts}).eq("id",doc.id):await sb.from("challenges").insert({id:doc.id,ev:+d.ev||0,data:d,created_by:authUser.id,ts:doc.ts});
+    }else if(doc.kind==="note"){
+      r=existed?await sb.from("notes").update({data:d,ts:doc.ts}).eq("id",doc.id):await sb.from("notes").insert({id:doc.id,author_id:authUser.id,data:d,ts:doc.ts});
+    }else if(doc.kind==="evt"){
+      r=await sb.from("events").upsert({id:doc.id,data:d,ts:doc.ts});
+    }else if(doc.kind==="log"){
+      r=await sb.from("logs").insert({id:doc.id,actor_id:authUser.id,data:d,ts:doc.ts});
+    }else if(doc.kind==="pad"){
+      r=existed?await sb.from("pads").update({updated_by:authUser.id,data:d,ts:doc.ts}).eq("id",doc.id):await sb.from("pads").insert({id:doc.id,updated_by:authUser.id,data:d,ts:doc.ts});
+    }
+    if(r.error)toast("⚠ Lỗi lưu dữ liệu: "+r.error.message,1);
+  }
+
   function put(doc){
+    const existed=docs.has(doc.id);
     doc.ts=Date.now();docs.set(doc.id,doc);emit(doc,"self",false);
-    if(mode==="supabase")sb.from(CFG.TABLE).upsert({id:doc.id,kind:doc.kind,data:doc.data,ts:doc.ts}).then(r=>{if(r.error)toast("⚠ Ghi Supabase lỗi: "+r.error.message,1)});
+    if(mode==="supabase")writeRemote(doc,existed);
     else{
       if(doc.kind==="log"){const lg=all("log").sort((a,b)=>a.ts-b.ts);for(let i=0;i<lg.length-1000;i++)docs.delete(lg[i].id)}
       saveLocal();bc&&bc.postMessage({t:"put",doc});
     }
   }
   async function putAsync(doc){
+    const existed=docs.has(doc.id);
     doc.ts=Date.now();docs.set(doc.id,doc);emit(doc,"self",false);
-    if(mode==="supabase"){const r=await sb.from(CFG.TABLE).upsert({id:doc.id,kind:doc.kind,data:doc.data,ts:doc.ts});if(r.error)toast("⚠ Ghi Supabase lỗi: "+r.error.message,1)}
+    if(mode==="supabase")await writeRemote(doc,existed);
     else{saveLocal();bc&&bc.postMessage({t:"put",doc})}
   }
   function del(id){
     const old=docs.get(id);if(!old)return;docs.delete(id);emit(old,"self",true);
-    if(mode==="supabase")sb.from(CFG.TABLE).delete().eq("id",id).then(r=>{if(r.error)toast("⚠ Xóa Supabase lỗi: "+r.error.message,1)});
-    else{saveLocal();bc&&bc.postMessage({t:"del",id})}
-  }
-  async function delMany(ids){
-    if(!ids||!ids.length)return;
-    ids.forEach(id=>{const old=docs.get(id);if(old){docs.delete(id);emit(old,"self",true)}});
-    if(mode==="supabase"&&sb){
-      for(let i=0;i<ids.length;i+=100){
-        const r=await sb.from(CFG.TABLE).delete().in("id",ids.slice(i,i+100));
-        if(r.error)toast("⚠ Xóa hàng loạt lỗi: "+r.error.message,1);
-      }
-    }else{saveLocal();bc&&ids.forEach(id=>bc.postMessage({t:"del",id}))}
+    if(mode==="supabase"){
+      const t=TBL[old.kind];if(!t||old.kind==="user")return;
+      sb.from(t).delete().eq("id",id).then(r=>{if(r.error)toast("⚠ Xóa dữ liệu lỗi: "+r.error.message,1)});
+    }else{saveLocal();bc&&bc.postMessage({t:"del",id})}
   }
   const all=kind=>{const o=[];docs.forEach(d=>{if(d.kind===kind)o.push(d)});return o};
   function states(){
@@ -1662,36 +1748,86 @@ const Store=(()=>{
     else{const t=Date.now();peers.forEach(v=>{if(t-v.at<20000)arr.push(v)})}
     return arr;
   }
-  async function verifyRecovery(token){
-    if(mode!=="supabase"||!sb)return false;
-    try{const {data,error}=await sb.rpc("verify_root_recovery",{token});return !error&&data===true}
-    catch(e){return false}
+
+  async function verifyGate(pass){
+    if(mode!=="supabase"||!sb)return String(pass||"").trim().toLowerCase()===CFG.LOCK_PASS.toLowerCase();
+    const {data,error}=await sb.rpc("verify_gate",{pass:String(pass||"")});
+    if(error)throw error;
+    return data===true;
   }
-  async function updateRootPw(proof,isRecovery,newHash,newSalt){
-    if(mode!=="supabase"||!sb)return false;
-    try{const {data,error}=await sb.rpc("update_root_password",{proof,is_recovery:!!isRecovery,new_hash:newHash,new_salt:newSalt});return !error&&data===true}
-    catch(e){return false}
+  async function signIn(handle,pw){
+    const email=String(handle||"").trim().toLowerCase()+"@gg.local";
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+    if(error)throw error;
+    authUser=data.user;await loadSupabaseAll();subscribeSupabase();return authUser;
+  }
+  async function signUp(handle,pw,invite,gate){
+    const email=String(handle||"").trim().toLowerCase()+"@gg.local";
+    const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{handle:String(handle||"").trim(),invite,gate}}});
+    if(error)throw error;
+    authUser=data.user;await loadSupabaseAll();subscribeSupabase();return authUser;
+  }
+  async function signOut(){
+    if(mode==="supabase"&&sb){try{await sb.auth.signOut()}catch(_){}}
+    authUser=null;docs.clear();
+  }
+  async function updatePassword(newPw){
+    if(mode!=="supabase"||!sb)return;
+    const {error}=await sb.auth.updateUser({password:newPw});
+    if(error)throw error;
+  }
+  async function changeSecrets(newGate,newInvite){
+    if(mode!=="supabase"||!sb)return;
+    const {error}=await sb.rpc("change_team_secrets",{new_gate:newGate||null,new_invite:newInvite||null});
+    if(error)throw error;
+  }
+  async function deleteMember(targetAuthId){
+    if(mode!=="supabase"||!sb)return;
+    const {error}=await sb.rpc("admin_delete_member",{target_id:targetAuthId});
+    if(error)throw error;
   }
   function setLocal(doc){docs.set(doc.id,doc);emit(doc,"self",false);if(mode!=="supabase")saveLocal()}
+
   async function uploadFile(file,dir="notes"){
-    if(mode==="supabase"&&sb){
+    if(mode==="supabase"&&sb&&authUser){
       const safeName=String(file.name||"file").replace(/[^\w.\-]+/g,"_").slice(-60);
-      const path=`${dir}/${Date.now()}_${rid()}_${safeName}`;
-      const {error}=await sb.storage.from("hub-files").upload(path,file,{contentType:file.type||"application/octet-stream"});
+      const bucket=dir==="avatars"?"avatars":"hub-files";
+      const path=`${authUser.id}/${Date.now()}_${rid()}_${safeName}`;
+      const {error}=await sb.storage.from(bucket).upload(path,file,{contentType:file.type||"application/octet-stream"});
       if(error)throw error;
-      const {data}=sb.storage.from("hub-files").getPublicUrl(path);
-      return{name:file.name,size:file.size,mime:file.type||"",url:data.publicUrl,path};
+      if(bucket==="avatars"){
+        const {data}=sb.storage.from(bucket).getPublicUrl(path);
+        return{name:file.name,size:file.size,mime:file.type||"",url:data.publicUrl,path,bucket};
+      }
+      return{name:file.name,size:file.size,mime:file.type||"",url:"",path,bucket};
     }
     if(file.size>1500000)throw new Error("Chế độ local chỉ hỗ trợ file ≤ 1.5MB");
     const url=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file)});
-    return{name:file.name,size:file.size,mime:file.type||"",url,path:null};
+    return{name:file.name,size:file.size,mime:file.type||"",url,path:null,bucket:null};
   }
-  function removeFile(path){
-    if(mode==="supabase"&&sb&&path)sb.storage.from("hub-files").remove([path]).catch(()=>{});
+  function signedUrl(bucket,path){
+    if(!path)return"";
+    const key=bucket+"|"+path,c=signedCache.get(key);
+    if(c&&c.exp>Date.now())return c.url;
+    if(c&&c.loading)return"";
+    if(mode==="supabase"&&sb&&authUser){
+      signedCache.set(key,{url:"",exp:0,loading:true});
+      sb.storage.from(bucket||"hub-files").createSignedUrl(path,3600).then(({data,error})=>{
+        if(!error&&data?.signedUrl){signedCache.set(key,{url:data.signedUrl,exp:Date.now()+3500e3});emit({id:"~signed",kind:"note"},"self",false)}
+        else signedCache.delete(key);
+      });
+    }
+    return"";
   }
+  function removeFile(path,bucket="hub-files"){
+    if(mode==="supabase"&&sb&&path)sb.storage.from(bucket).remove([path]).catch(()=>{});
+  }
+
   return{
-    init,put,putAsync,del,delMany,setLocal,all,get:id=>docs.get(id),on:f=>subs.add(f),mode:()=>mode,verifyRecovery,updateRootPw,uploadFile,removeFile,
-    client:()=>sb,tabId:()=>TAB,
+    init,put,putAsync,del,setLocal,all,get:id=>docs.get(id),on:f=>subs.add(f),mode:()=>mode,
+    authUid:()=>authUser?authUser.id:null,reloadAll:loadSupabaseAll,
+    verifyGate,signIn,signUp,signOut,updatePassword,changeSecrets,deleteMember,
+    uploadFile,signedUrl,removeFile,client:()=>sb,tabId:()=>TAB,
     track(n,chId,vcId){me=n;if(chId!==undefined)focus=chId||null;if(vcId!==undefined)vcRoom=vcId||null;if(mode==="supabase"&&ch)ch.track({n:me,ch:focus,vc:vcRoom}).catch(()=>{});else{hb();emit({id:"~presence",kind:"presence"},"self")}},
     online(){return new Set(states().map(x=>x.n).filter(Boolean))},
     focusOn(id){return[...new Set(states().filter(x=>x.ch===id&&x.n).map(x=>x.n))]},
@@ -1780,6 +1916,7 @@ function markUserSkip(name,add=true){
   Store.put({id:"cfg:skip",kind:"cfg",data:{list:[...set]}});
 }
 function seed(){
+  if(Store.mode()==="supabase")return;
   const skip=new Set(((Store.get("cfg:skip")||{}).data?.list||[]).map(s=>s.toLowerCase()));
   M.forEach(([n,ctf],i)=>{
     if(!U(n)&&!skip.has(n.toLowerCase())){
@@ -2172,10 +2309,15 @@ function renderTerm(){
   h+=ns.length?ns.map((o,i)=>{
     const f=o.data.file,vc=o.data.voice;
     let fhtml="";
-    if(f&&f.url){
-      const safeF=esc(safeUrl(f.url));
-      if((f.mime||"").startsWith("image/"))fhtml=`<div><img class="nimg" src="${safeF}" alt="${esc(f.name)}" data-img="${safeF}"></div><div class="nfile">🖼 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
-      else fhtml=`<div class="nfile">📎 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
+    if(f&&(f.url||f.path)){
+      const rawUrl=f.url||(f.path?Store.signedUrl(f.bucket||"hub-files",f.path):"");
+      if(rawUrl){
+        const safeF=esc(safeUrl(rawUrl));
+        if((f.mime||"").startsWith("image/"))fhtml=`<div><img class="nimg" src="${safeF}" alt="${esc(f.name)}" data-img="${safeF}"></div><div class="nfile">🖼 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
+        else fhtml=`<div class="nfile">📎 ${esc(f.name)} (${fmtBytes(f.size||0)}) <a class="mini" href="${safeF}" download="${esc(f.name)}" target="_blank" rel="noopener">⤓ tải về</a></div>`;
+      }else{
+        fhtml=`<div class="nfile dim">⏳ đang tải liên kết an toàn: ${esc(f.name)}…</div>`;
+      }
     }
     let vhtml="";
     if(vc){
@@ -2215,7 +2357,7 @@ async function addNote(t,file){
   act("note",`<b>${esc(ME)}</b> ghi thông báo #${n}: ${maskNoteLog(t,fileMeta)}`);
   SND.notify();say("đã lưu thông báo #"+n);
 }
-function delNote(i){const o=noteAt(i);if(!o){SND.deny();return say("không có thông báo #"+i)}if(!canNote(o)){SND.deny();return say("không có quyền xóa #"+i)}if(o.data.file?.path)Store.removeFile(o.data.file.path);Store.del(o.id);if(editing===i)stopEdit();SND.tap();say("đã xóa #"+i)}
+function delNote(i){const o=noteAt(i);if(!o){SND.deny();return say("không có thông báo #"+i)}if(!canNote(o)){SND.deny();return say("không có quyền xóa #"+i)}if(o.data.file?.path)Store.removeFile(o.data.file.path,o.data.file.bucket||"hub-files");Store.del(o.id);if(editing===i)stopEdit();SND.tap();say("đã xóa #"+i)}
 function startEdit(i){const o=noteAt(i);if(!o){SND.deny();return say("không có thông báo #"+i)}if(!canNote(o)){SND.deny();return say("không có quyền sửa #"+i)}editing=i;$("ti").value=o.data.t;$("ti").focus();SND.tap();say("đang sửa #"+i+" — Enter để lưu, Esc để hủy")}
 function stopEdit(){editing=null;$("ti").value="";renderTerm()}
 function saveNote(i,t){const o=noteAt(i);if(!o){SND.deny();return say("không có thông báo #"+i)}if(!canNote(o)){SND.deny();return say("không có quyền sửa #"+i)}o.data.t=t.slice(0,280);Store.put(o);SND.ok();say("đã cập nhật #"+i)}
@@ -3142,7 +3284,7 @@ function avModal(n){
     $("avSv").onclick=async()=>{
       const cur=U(n);if(!cur)return closeModal();
       if(resetDefault){
-        if(cur.avPath)Store.removeFile(cur.avPath);
+        if(cur.avPath)Store.removeFile(cur.avPath,"avatars");
         delete cur.av;delete cur.avPath;
         putUser(cur);act("edit",`<b>${esc(ME)}</b> đặt lại avatar mặc định${n!==ME?" cho "+esc(n):""}`);
         closeModal();SND.ok();toast("Đã đặt lại avatar mặc định");return;
@@ -3152,7 +3294,7 @@ function avModal(n){
       try{
         if(Store.mode()==="supabase"){
           const meta=await Store.uploadFile(pickedFile,"avatars");
-          if(cur.avPath)Store.removeFile(cur.avPath);
+          if(cur.avPath)Store.removeFile(cur.avPath,"avatars");
           cur.av=meta.url;cur.avPath=meta.path;
         }else{
           if(pickedFile.size>2200000)throw new Error("Chế độ local chỉ hỗ trợ avatar ≤ 2.2MB (bật Supabase để up file lớn)");
@@ -3193,75 +3335,47 @@ function skillModal(n){
 }
 let RECOVERY_PROOF=null;
 function pwModal(isRec){
-  modal(isRec?"khôi phục · đặt mật khẩu mới":"đổi mật khẩu",`<form class="fm" id="pf">
-${isRec?'<div class="dim" style="font-size:12px">Bạn đã đăng nhập bằng khóa khôi phục LEADER. Hãy đặt mật khẩu mới ngay để khóa kẻ lạ.</div>':'<label>Mật khẩu hiện tại<input type="password" name="o" required autocomplete="current-password"></label>'}
-<label>Mật khẩu mới (≥ 4 ký tự)<input type="password" name="n" required minlength="4" autocomplete="new-password"></label><label>Nhập lại<input type="password" name="n2" required autocomplete="new-password"></label><div class="err" id="pfe"></div><div class="acts"><button class="btn" type="button" id="pcl">hủy</button><button class="btn pri" type="submit">đổi</button></div></form>`,()=>{
+  modal("đổi mật khẩu",`<form class="fm" id="pf">
+<label>Mật khẩu hiện tại<input type="password" name="o" required autocomplete="current-password"></label>
+<label>Mật khẩu mới (≥ 6 ký tự)<input type="password" name="n" required minlength="6" autocomplete="new-password"></label>
+<label>Nhập lại<input type="password" name="n2" required autocomplete="new-password"></label>
+<div class="err" id="pfe"></div><div class="acts"><button class="btn" type="button" id="pcl">hủy</button><button class="btn pri" type="submit">đổi</button></div></form>`,()=>{
     $("pcl").onclick=closeModal;
     $("pf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),u=U(ME);
-      if(String(f.get("n")).length<4)return $("pfe").textContent="Mật khẩu mới quá ngắn";
+      if(String(f.get("n")).length<6)return $("pfe").textContent="Mật khẩu mới tối thiểu 6 ký tự";
       if(f.get("n")!==f.get("n2"))return $("pfe").textContent="Hai lần nhập không khớp";
-      const newSalt=rid(),newH=await hashPw(f.get("n"),newSalt);
-      if(isRootUser(u)&&Store.mode()==="supabase"){
-        const proof=isRec?RECOVERY_PROOF:await hashPw(f.get("o"),u.salt);
-        if(!await Store.updateRootPw(proof,!!isRec,newH,newSalt))return $("pfe").textContent=isRec?"Khóa khôi phục không hợp lệ":"Sai mật khẩu hiện tại";
-        RECOVERY_PROOF=null;u.salt=newSalt;u.h=newH;
-        Store.setLocal({id:uid(u.name),kind:"user",data:u,ts:Date.now()});
-      }else{
-        if(!isRec&&await hashPw(f.get("o"),u.salt)!==u.h)return $("pfe").textContent="Sai mật khẩu hiện tại";
-        u.salt=newSalt;u.h=newH;putUser(u);
+      if(Store.mode()==="supabase"){
+        try{
+          await Store.signIn(ME,f.get("o"));
+          await Store.updatePassword(f.get("n"));
+          closeModal();SND.ok();toast("✔ Đã đổi mật khẩu mới");
+        }catch(err){$("pfe").textContent="Sai mật khẩu hiện tại hoặc lỗi hệ thống"}
+        return;
       }
+      if(!isRec&&await hashPw(f.get("o"),u.salt)!==u.h)return $("pfe").textContent="Sai mật khẩu hiện tại";
+      u.salt=rid();u.h=await hashPw(f.get("n"),u.salt);putUser(u);
       LS.set("gg_sess",{n:ME,h:u.h});closeModal();SND.ok();toast("Đã đổi mật khẩu")};
   });
 }
 function renameModal(oldName){
+  if(Store.mode()==="supabase")return toast("Chế độ bảo mật Auth không hỗ trợ đổi username để tránh mất phiên đăng nhập",1);
   if(!canEditUser(oldName))return;
   modal("đổi username · "+oldName,`<form class="fm" id="rnf">
-<div class="dim" style="font-size:12px">Hệ thống sẽ tự động cập nhật username mới trên toàn bộ thử thách, đội hình và thông báo.</div>
 <label>Username mới (2–24 ký tự: chữ, số, _ . -)<input name="n" required maxlength="24" value="${esc(oldName)}" autocomplete="off"></label>
-<div class="err" id="rne"></div>
-<div class="acts"><button class="btn" type="button" id="rncl">hủy</button><button class="btn pri" type="submit">cập nhật</button></div>
-</form>`,()=>{
+<div class="err" id="rne"></div><div class="acts"><button class="btn" type="button" id="rncl">hủy</button><button class="btn pri" type="submit">cập nhật</button></div></form>`,()=>{
     $("rncl").onclick=closeModal;
     $("rnf").onsubmit=async e=>{
-      e.preventDefault();
-      const raw=String(new FormData(e.target).get("n")).trim().replace(/\s+/g,"_");
+      e.preventDefault();const raw=String(new FormData(e.target).get("n")).trim().replace(/\s+/g,"_");
       if(!/^[\w.\-]{2,24}$/.test(raw))return $("rne").textContent="Tên 2–24 ký tự: chữ, số, _ . -";
       if(raw===oldName)return closeModal();
       const dup=users().find(x=>x.name.toLowerCase()===raw.toLowerCase()&&x.name!==oldName);
       if(dup)return $("rne").textContent=`Username "${dup.name}" đã tồn tại`;
       const u=U(oldName);if(!u)return closeModal();
       const newU=Object.assign({},u,{name:raw});
-      const sameId=uid(raw)===uid(oldName);
-      if(!sameId){
-        markUserSkip(oldName,true);
-        markUserSkip(raw,false);
-      }
-      if(oldName===ME){
-        ME=raw;
-        if(newU.h)LS.set("gg_sess",{n:raw,h:newU.h});
-        Store.track(raw);
-      }
-      if(PROF===oldName)PROF=raw;
-      if(HSEL===oldName)HSEL=raw;
-      if(AV&&AV.name===oldName)AV.name=raw;
-      await Store.putAsync(Object.assign({id:uid(newU.name),kind:"user",data:newU}));
-      if(!sameId)Store.del(uid(oldName));
-      Store.all("chal").forEach(c=>{
-        const d=c.data;let chg=false;
-        if(d.solver===oldName){d.solver=raw;chg=true}
-        if(d.by===oldName){d.by=raw;chg=true}
-        if(d.wuBy===oldName){d.wuBy=raw;chg=true}
-        if((d.who||[]).includes(oldName)){d.who=[...new Set(d.who.map(n=>n===oldName?raw:n))];chg=true}
-        if(chg)Store.put(c);
-      });
-      Store.all("evt").forEach(ev=>{
-        const d=ev.data;
-        if((d.lineup||[]).includes(oldName)){d.lineup=[...new Set(d.lineup.map(n=>n===oldName?raw:n))];Store.put(ev)}
-      });
-      Store.all("note").forEach(nt=>{
-        if(nt.data.by===oldName){nt.data.by=raw;Store.put(nt)}
-      });
-      act("edit",`<b>${esc(ME)}</b> đổi username <b>${esc(oldName)}</b> → <b>${esc(raw)}</b>`);
+      if(oldName===ME){ME=raw;if(newU.h)LS.set("gg_sess",{n:raw,h:newU.h});Store.track(raw)}
+      if(PROF===oldName)PROF=raw;if(HSEL===oldName)HSEL=raw;if(AV&&AV.name===oldName)AV.name=raw;
+      await Store.putAsync({id:uid(newU.name),kind:"user",data:newU});
+      if(uid(raw)!==uid(oldName))Store.del(uid(oldName));
       closeModal();SND.ok();toast(`Đã đổi username thành ${raw}`);renderNow();
     };
   });
@@ -3270,57 +3384,52 @@ function delUserModal(target){
   if(!member()||!isLeader())return;
   const u=U(target);if(!u)return;
   if(isRootUser(u)){SND.deny();return toast("Tài khoản gốc không thể bị xóa",1)}
-  const leaders=users().filter(x=>(x.roles||[]).includes("leader"));
-  if((u.roles||[]).includes("leader")&&leaders.length<=1){
-    SND.deny();return toast("Team cần ít nhất 1 leader — hãy cấp leader cho người khác trước khi xóa",1);
-  }
   modal("xóa tài khoản · "+target,`<form class="fm" id="dlf">
-<div class="dim" style="font-size:12.5px">Hành động này sẽ xóa vĩnh viễn tài khoản <b style="color:var(--red)">${esc(target)}</b> khỏi team${target===ME?" (bạn sẽ bị đăng xuất ngay sau đó)":""}.</div>
+<div class="dim" style="font-size:12.5px">Hành động này sẽ xóa vĩnh viễn tài khoản <b style="color:var(--red)">${esc(target)}</b> khỏi team.</div>
 <label>Gõ chính xác <b>${esc(target)}</b> để xác nhận xóa<input name="cf" required autocomplete="off" placeholder="${esc(target)}"></label>
-<div class="err" id="dle"></div>
-<div class="acts"><button class="btn" type="button" id="dlcl">hủy</button><button class="btn dng" type="submit">xác nhận xóa</button></div>
-</form>`,()=>{
+<div class="err" id="dle"></div><div class="acts"><button class="btn" type="button" id="dlcl">hủy</button><button class="btn dng" type="submit">xác nhận xóa</button></div></form>`,()=>{
     $("dlcl").onclick=closeModal;
-    $("dlf").onsubmit=e=>{
-      e.preventDefault();
-      const v=String(new FormData(e.target).get("cf")).trim();
+    $("dlf").onsubmit=async e=>{
+      e.preventDefault();const v=String(new FormData(e.target).get("cf")).trim();
       if(v!==target)return $("dle").textContent="Tên xác nhận không khớp";
-      markUserSkip(target,true);
-      act("team",`<b>${esc(ME)}</b> đã xóa tài khoản <b>${esc(target)}</b>`);
-      Store.del(uid(target));
-      closeModal();SND.tap();
-      if(target===ME){LS.del("gg_sess");location.reload();return}
-      toast(`Đã xóa tài khoản ${target}`);
-      go("team");
+      try{
+        if(Store.mode()==="supabase")await Store.deleteMember(u.authId);
+        else Store.del(uid(target));
+        closeModal();SND.tap();toast(`Đã xóa tài khoản ${target}`);go("team");
+      }catch(err){$("dle").textContent=err.message||"Lỗi xóa tài khoản"}
     };
   });
 }
 function adminModal(){
   if(!isLeader())return;
-  const draw=()=>`<div class="fm"><div class="sec">// MÃ MỜI TEAM</div><form class="skr" id="invf" style="grid-template-columns:minmax(0,1fr) auto"><input name="inv" maxlength="40" placeholder="mã mời mới (vd GGCoXanh-2027)" aria-label="Mã mời mới"><button class="btn pri" type="submit">đổi mã</button></form>
-<div class="dim" style="font-size:11.5px">Mã hiện tại chỉ lưu dạng băm nên không xem lại được. ${Store.get("cfg:team")?"Đã đặt mã riêng.":"Đang dùng mã mặc định trong CFG.INVITE."}</div>
-<div class="sec">// THÀNH VIÊN</div><table class="ltab"><tbody>${users().map(u=>{const rt=isRootUser(u);return`<tr><td>${esc(u.name)} <small class="dim">(${esc(u.accId||"—")})</small></td><td>${u.h?'<span style="color:var(--g)">đã kích hoạt</span>':'<span style="color:var(--amb)">chờ kích hoạt</span>'}</td><td style="text-align:right">${rt?'<span class="role leader" style="--rc:var(--mag)">ROOT LOCKED</span>':`${u.h&&u.name!==ME?`<button class="mini a" type="button" data-rs="${esc(u.name)}">reset mật khẩu</button> `:""}${u.name!==ME?`<button class="mini r" type="button" data-dl="${esc(u.name)}">xóa</button>`:""}`}</td></tr>`}).join("")}</tbody></table>
-<form class="skr" id="addf" style="grid-template-columns:minmax(0,1fr) 120px auto"><input name="n" maxlength="24" placeholder="tên thành viên mới" aria-label="Tên"><input name="ctf" type="number" placeholder="CTFtime id" aria-label="CTFtime id"><button class="btn" type="submit">+ thêm</button></form>
-<div class="acts" style="justify-content:space-between;align-items:center;margin-top:4px"><span class="dim" style="font-size:11.5px">Thành viên mới dùng mã mời để đặt mật khẩu.</span><button class="btn dng" type="button" id="admDelAll">✖ xóa tất cả (trừ root)</button></div><div class="err" id="ade"></div></div>`;
+  const sbMode=Store.mode()==="supabase";
+  const draw=()=>`<div class="fm"><div class="sec">// MÃ MỜI &amp; PASSPHRASE CỔNG</div><form class="skr" id="invf" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto"><input name="gate" maxlength="40" placeholder="passphrase mới (để trống = giữ cũ)" aria-label="Passphrase mới"><input name="inv" maxlength="40" placeholder="mã mời mới (để trống = giữ cũ)" aria-label="Mã mời mới"><button class="btn pri" type="submit">cập nhật</button></form>
+<div class="dim" style="font-size:11.5px">${sbMode?"Lưu bảo mật trong vùng private của Supabase. Thành viên mới đăng ký trực tiếp qua [2] mã mời team.":"Đang chạy chế độ local."}</div>
+<div class="sec">// THÀNH VIÊN</div><table class="ltab"><tbody>${users().map(u=>{const rt=isRootUser(u);return`<tr><td>${esc(u.name)} <small class="dim">(${esc(u.accId||"—")})</small></td><td><span style="color:var(--g)">đã kích hoạt</span></td><td style="text-align:right">${rt?'<span class="role leader" style="--rc:var(--mag)">ROOT LOCKED</span>':(u.name!==ME?`<button class="mini r" type="button" data-dl="${esc(u.name)}">xóa</button>`:"")}</td></tr>`}).join("")}</tbody></table>
+<div class="err" id="ade"></div></div>`;
   modal("quản trị team",draw(),function mount(mb){
-    $("invf").onsubmit=async e=>{e.preventDefault();const v=String(new FormData(e.target).get("inv")).trim();if(v.length<4)return $("ade").textContent="Mã mời tối thiểu 4 ký tự";Store.put({id:"cfg:team",kind:"cfg",data:{inv:await hashPw(v.toUpperCase(),"invite")}});act("sys",`<b>${esc(ME)}</b> đổi mã mời team`);toast("Đã đổi mã mời: "+v);mb.innerHTML=draw();mount(mb)};
-    $("addf").onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),n=String(f.get("n")).trim().replace(/\s+/g,"_");if(!/^[\w.\-]{2,24}$/.test(n))return $("ade").textContent="Tên 2–24 ký tự: chữ, số, _ . -";if(U(n))return $("ade").textContent="Tên đã tồn tại";markUserSkip(n,false);putUser({name:n,ctf:+f.get("ctf")||null,accId:genAccId(),roles:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:users().length});act("team",`<b>${esc(ME)}</b> thêm thành viên <b>${esc(n)}</b>`);mb.innerHTML=draw();mount(mb)};
-    const da=$("admDelAll");
-    if(da)da.onclick=async()=>{
-      const targets=users().filter(u=>!isRootUser(u));
-      if(!targets.length)return toast("Không có tài khoản phụ nào để xóa");
-      if(!da.dataset.cf){da.dataset.cf=1;da.textContent=`⚠ bấm lại để xóa ${targets.length} tài khoản`;setTimeout(()=>{if(da.isConnected){delete da.dataset.cf;da.textContent="✖ xóa tất cả (trừ root)"}},3500);return}
-      da.disabled=true;da.textContent="đang xóa…";
-      const seedSet=new Set(M.map(x=>x[0].toLowerCase()));
-      targets.forEach(u=>{if(seedSet.has(u.name.toLowerCase()))markUserSkip(u.name,true)});
-      await Store.delMany(targets.map(u=>uid(u.name)));
-      act("team",`<b>${esc(ME)}</b> đã xóa toàn bộ ${targets.length} tài khoản phụ (giữ lại root)`);
-      SND.tap();toast(`Đã xóa sạch ${targets.length} tài khoản`);
-      mb.innerHTML=draw();mount(mb);
+    $("invf").onsubmit=async e=>{
+      e.preventDefault();const f=new FormData(e.target),g=String(f.get("gate")).trim(),v=String(f.get("inv")).trim();
+      if(!g&&!v)return $("ade").textContent="Nhập ít nhất một trường cần đổi";
+      if(g&&g.length<3)return $("ade").textContent="Passphrase tối thiểu 3 ký tự";
+      if(v&&v.length<4)return $("ade").textContent="Mã mời tối thiểu 4 ký tự";
+      try{
+        if(sbMode)await Store.changeSecrets(g||null,v||null);
+        else if(v)Store.put({id:"cfg:team",kind:"cfg",data:{inv:await hashPw(v.toUpperCase(),"invite")}});
+        act("sys",`<b>${esc(ME)}</b> cập nhật bí mật cổng / mã mời team`);
+        toast("✔ Đã cập nhật thành công");mb.innerHTML=draw();mount(mb);
+      }catch(err){$("ade").textContent=err.message||"Không thể cập nhật"}
     };
-    mb.onclick=e=>{const rs=e.target.dataset.rs,dl=e.target.dataset.dl;
-      if(rs){const u=U(rs);if(!u||isRootUser(u))return;delete u.h;delete u.salt;putUser(u);act("sys",`<b>${esc(ME)}</b> reset mật khẩu của <b>${esc(rs)}</b>`);mb.innerHTML=draw();mount(mb)}
-      if(dl){const u=U(dl);if(!u||isRootUser(u))return;if(e.target.dataset.cf){markUserSkip(dl,true);Store.del(uid(dl));act("team",`<b>${esc(ME)}</b> xóa thành viên <b>${esc(dl)}</b>`);mb.innerHTML=draw();mount(mb)}else{e.target.dataset.cf=1;e.target.textContent="chắc chắn?"}}};
+    mb.onclick=async e=>{
+      const dl=e.target.dataset.dl;if(!dl)return;
+      const u=U(dl);if(!u||isRootUser(u))return;
+      if(!e.target.dataset.cf){e.target.dataset.cf=1;e.target.textContent="chắc chắn?";return}
+      try{
+        if(sbMode)await Store.deleteMember(u.authId);else Store.del(uid(dl));
+        act("team",`<b>${esc(ME)}</b> xóa thành viên <b>${esc(dl)}</b>`);
+        toast(`Đã xóa ${dl}`);mb.innerHTML=draw();mount(mb);
+      }catch(err){$("ade").textContent=err.message||"Lỗi xóa thành viên"}
+    };
   });
 }
 // =====================================================================
@@ -4428,109 +4537,133 @@ const Lock=(()=>{
   const line=(h,c)=>{const d=document.createElement("div");d.className="ln "+(c||"");d.innerHTML=h;B.appendChild(d);B.scrollTop=B.scrollHeight;return d};
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   async function type(text,c,sp){const d=line("",c);for(let i=1;i<=text.length;i+=2){d.textContent=text.slice(0,i);if(i%6===1)SND.chirp();await wait(sp||9)}d.textContent=text;return d}
-  function ask(pr,kind){step=kind;P.textContent=pr;I.type=/pass|pw/.test(kind)?"password":"text";I.value="";I.disabled=false;I.focus()}
+  function ask(pr,kind){step=kind;P.textContent=pr;I.type=/pass|pw|inv/.test(kind)?"password":"text";I.value="";I.disabled=false;I.focus()}
   function deny(m){line(m,"er");LKX.classList.remove("shake","deny");void LKX.offsetWidth;LKX.classList.add("shake","deny");setTimeout(()=>LKX.classList.remove("deny"),900);SND.deny()}
   function opts(list){const d=line('<div class="lko">'+list.map(o=>`<button type="button" data-v="${o[0]}"><b>[${o[0]}]</b>${o[1]}</button>`).join("")+"</div>");d.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(!busy)handle(b.dataset.v)})}
+
   async function boot(){
     ['pointerdown','keydown','touchend'].forEach(ev=>addEventListener(ev,()=>SND.unlock(),{once:true,capture:true}));
     line(`<div class="lkt"><span class="gt" data-text="Green Grasses">Green Grasses</span></div><div class="lks">ZERO-DAY BUNKER · SECURE TERMINAL</div>`);
-    await type("[ secure shell v4.2 · node VN-HCM-01 · tty1 ]","dm");
+    await type("[ secure shell v5.0 · zero-trust auth · tty1 ]","dm");
     await type("› kiểm tra tính toàn vẹn hệ thống ............ OK","cy");
-    const sy=line("› đồng bộ dữ liệu team ........................ ","cy");
+    const sy=line("› kết nối máy chủ xác thực .................... ","cy");
     fetchNetInfo();
     const mode=await Store.init();seed();
-    sy.innerHTML+=mode==="supabase"?'<b>OK</b> (supabase realtime)':'<b>OK</b> (local · trình duyệt này)';
+    sy.innerHTML+=mode==="supabase"?'<b>OK</b> (supabase auth + rls)':'<b>OK</b> (local · trình duyệt này)';
     await type("› trạng thái căn cứ: LOCKED","er");
     line("");line("Nhập passphrase để mở khóa căn cứ.");line("hint: "+esc(CFG.LOCK_HINT),"hn");
     ask("passphrase:","pass");
   }
   function menu(){
     line("");line("Chọn phương thức xác thực:","cy");
-    opts([["1","tài khoản team   (user + mật khẩu)"],["2","mã mời team      (lần đầu / thành viên mới)"],["3","khách            (chỉ xem)"]]);
+    opts([["1","tài khoản team   (username + mật khẩu)"],["2","mã mời team      (đăng ký thành viên mới)"],["3","khách            (chỉ xem công khai)"]]);
     ask("chọn [1-3]:","menu");
   }
   async function afterPass(){
+    if(Store.mode()==="supabase"){
+      const uidAuth=Store.authUid();
+      const u=uidAuth?users().find(x=>x.authId===uidAuth):null;
+      if(u){
+        line(`› phát hiện phiên đăng nhập hợp lệ: <b>${esc(u.name)}</b> ${(u.roles||[]).length?"["+u.roles.map(esc).join(", ")+"]":""}`,"cy");
+        opts([["y","tiếp tục với "+esc(u.name)],["n","đăng nhập tài khoản khác"]]);
+        tmp.sess=u.name;ask(`tiếp tục với ${u.name}? [Y/n]:`,"sess");return;
+      }
+      menu();return;
+    }
     const s=LS.get("gg_sess",null),u=s&&U(s.n);
-    if(u&&u.h&&u.h===s.h){line(`› phát hiện phiên đăng nhập trước: <b>${esc(u.name)}</b> ${(u.roles||[]).length?"["+u.roles.map(esc).join(", ")+"]":""}`,"cy");opts([["y","tiếp tục với "+esc(u.name)],["n","đăng nhập tài khoản khác"]]);tmp.sess=u.name;ask(`tiếp tục với ${u.name}? [Y/n]:`,"sess");}
+    if(u&&u.h&&u.h===s.h){line(`› phát hiện phiên trước: <b>${esc(u.name)}</b>`,"cy");opts([["y","tiếp tục với "+esc(u.name)],["n","đăng nhập tài khoản khác"]]);tmp.sess=u.name;ask(`tiếp tục với ${u.name}? [Y/n]:`,"sess")}
     else menu();
   }
   async function handle(v){
     if(busy)return;const raw=String(v),val=raw.trim();busy=true;I.disabled=true;
-    const echo=/pass|pw/.test(step)?"•".repeat(raw.length||1):esc(raw);
+    const echo=/pass|pw|inv/.test(step)?"•".repeat(raw.length||1):esc(raw);
     if(step!=="boot")line(`<span class="dm">${esc(P.textContent)}</span> ${echo}`);
     try{
     switch(step){
-      case"pass":
-        if(val.toLowerCase()===CFG.LOCK_PASS.toLowerCase()){line("✔ passphrase hợp lệ — đang mở khóa…","ok");SND.ok();await wait(350);await afterPass()}
-        else{tries++;deny(`✖ ACCESS DENIED · sai passphrase (lần ${tries})`);if(tries>=3)line("hint: "+esc(CFG.LOCK_HINT)+"  ← (Hint: Một từ trong tên của team)","hn");ask("passphrase:","pass")}
+      case"pass":{
+        let ok=false;
+        try{ok=await Store.verifyGate(val)}catch(e){ok=false}
+        if(ok){tmp.gate=val;line("✔ passphrase hợp lệ — đang mở khóa…","ok");SND.ok();await wait(300);await afterPass()}
+        else{tries++;deny(`✖ ACCESS DENIED · sai passphrase (lần ${tries})`);if(tries>=3)line("hint: "+esc(CFG.LOCK_HINT),"hn");ask("passphrase:","pass")}
+        break}
+      case"sess":
+        if(/^(n|no|không)$/i.test(val)){await Store.signOut();menu()}
+        else await finish(tmp.sess);
         break;
-      case"sess":if(/^(n|no|không)$/i.test(val))menu();else await finish(tmp.sess);break;
       case"menu":
-        if(val==="1"||/^login|user|tài/i.test(val))ask("user / #ID:","user");
+        if(val==="1"||/^login|user|tài/i.test(val))ask("username:","user");
         else if(val==="2"||/^inv|mã/i.test(val))ask("mã mời:","inv");
         else if(val==="3"||/^guest|khách/i.test(val))await finish(null);
         else{line("lựa chọn không hợp lệ","er");ask("chọn [1-3]:","menu")}
         break;
-      case"user":{
+      case"user":
         if(val==="back"){menu();break}
-        if(!val){ask("user / #ID:","user");break}
-        if(/^LEADER:(--5h4rk--|#?5H4RK)$/i.test(val)){
-          if(Store.mode()!=="supabase"){deny("✖ khôi phục LEADER chỉ khả dụng khi kết nối Supabase SQL");ask("user / #ID:","user");break}
-          line("› kích hoạt giao thức khôi phục tài khoản ROOT","cy");
-          ask("recovery key:","rec");break;
-        }
-        const normId=(val.startsWith("#")?val:"#"+val).toUpperCase();
-        const found=users().find(x=>x.name.toLowerCase()===val.toLowerCase()||(x.accId&&x.accId.toUpperCase()===normId));
-        tmp.user=val;tmp.matched=found?found.name:null;
-        ask("password:","pw");break}
-      case"rec":{
-        if(val==="back"){menu();break}
-        const rootU=users().find(isRootUser)||U("--5h4rk--");
-        if(!rootU){deny("✖ không tìm thấy tài khoản root");ask("user / #ID:","user");break}
-        if(await Store.verifyRecovery(raw)){
-          RECOVERY_PROOF=raw;NEED_PW_RESET=true;
-          await finish(rootU.name,"recovery");
-        }else{
-          deny("✖ recovery key không đúng");
-          line('gõ <b>back</b> để quay lại menu',"dm");
-          ask("recovery key:","rec");
-        }
-        break}
+        if(!val){ask("username:","user");break}
+        tmp.user=val;ask("password:","pw");break;
       case"pw":{
-        const u=tmp.matched?U(tmp.matched):null;
-        if(u&&u.h&&await hashPw(raw,u.salt)===u.h){await finish(u.name)}
-        else{deny(u&&!u.h?`✖ tài khoản ${esc(u.name)} chưa kích hoạt — dùng [2] mã mời để đặt mật khẩu`:"✖ sai user/#ID hoặc mật khẩu");line('gõ <b>back</b> để quay lại menu',"dm");ask("user / #ID:","user")}
+        if(Store.mode()==="supabase"){
+          try{
+            await Store.signIn(tmp.user,raw);
+            const uidAuth=Store.authUid();
+            const u=users().find(x=>x.authId===uidAuth)||users().find(x=>x.name.toLowerCase()===tmp.user.toLowerCase());
+            if(!u)throw new Error("Không tìm thấy hồ sơ thành viên");
+            await finish(u.name);
+          }catch(err){
+            deny("✖ sai username hoặc mật khẩu");
+            line('gõ <b>back</b> để quay lại menu',"dm");ask("username:","user");
+          }
+          break;
+        }
+        const u=users().find(x=>x.name.toLowerCase()===tmp.user.toLowerCase());
+        if(u&&u.h&&await hashPw(raw,u.salt)===u.h)await finish(u.name);
+        else{deny("✖ sai username hoặc mật khẩu");line('gõ <b>back</b> để quay lại menu',"dm");ask("username:","user")}
         break}
       case"inv":
         if(val==="back"){menu();break}
-        if(await checkInvite(val)){line("✔ mã mời hợp lệ","ok");SND.ok();const fr=users().filter(u=>!u.h).map(u=>u.name);line(fr.length?`thành viên chưa kích hoạt: <b>${fr.map(esc).join(", ")}</b> — hoặc nhập tên mới`:"nhập tên (handle) của bạn","cy");if(fr.length)opts(fr.map(n=>[n,""]));ask("tên của bạn:","name")}
+        if(Store.mode()==="supabase"){
+          if(val.length<4){deny("✖ mã mời không hợp lệ");ask("mã mời:","inv");break}
+          tmp.inv=val;line("nhập tên (handle) bạn muốn đăng ký (2–24 ký tự):","cy");ask("tên của bạn:","name");break;
+        }
+        if(await checkInvite(val)){tmp.inv=val;line("✔ mã mời hợp lệ","ok");SND.ok();ask("tên của bạn:","name")}
         else{deny("✖ mã mời không đúng");line('gõ <b>back</b> để quay lại menu',"dm");ask("mã mời:","inv")}
         break;
       case"name":{
         const n=val.replace(/\s+/g,"_");
         const bad=validateUsernameClean(n);
         if(bad){deny("✖ "+bad);ask("tên của bạn:","name");break}
-        const ex=users().find(x=>x.name.toLowerCase()===n.toLowerCase());
-        if(ex&&ex.h){line(`✖ ${esc(ex.name)} đã có mật khẩu — dùng [1] tài khoản, hoặc nhờ leader reset`,"er");menu();break}
-        tmp.name=ex?ex.name:n;tmp.isNew=!ex;line(ex?`› kích hoạt tài khoản <b>${esc(ex.name)}</b>`:`› tạo tài khoản mới <b>${esc(n)}</b>`,"cy");ask("đặt mật khẩu (≥ 4 ký tự):","pw1");break}
-      case"pw1":if(raw.length<4){line("mật khẩu quá ngắn","er");ask("đặt mật khẩu (≥ 4 ký tự):","pw1");break}tmp.pw=raw;ask("nhập lại mật khẩu:","pw2");break;
+        tmp.name=n;line(`› đăng ký tài khoản <b>${esc(n)}</b>`,"cy");ask("đặt mật khẩu (≥ 6 ký tự):","pw1");break}
+      case"pw1":
+        if(raw.length<6){line("mật khẩu quá ngắn (tối thiểu 6 ký tự)","er");ask("đặt mật khẩu (≥ 6 ký tự):","pw1");break}
+        tmp.pw=raw;ask("nhập lại mật khẩu:","pw2");break;
       case"pw2":{
-        if(raw!==tmp.pw){line("✖ hai lần nhập không khớp","er");ask("đặt mật khẩu (≥ 4 ký tự):","pw1");break}
+        if(raw!==tmp.pw){line("✖ hai lần nhập không khớp","er");ask("đặt mật khẩu (≥ 6 ký tự):","pw1");break}
+        if(Store.mode()==="supabase"){
+          try{
+            await Store.signUp(tmp.name,tmp.pw,tmp.inv,tmp.gate);
+            tmp.pw=null;
+            const u=U(tmp.name)||users().find(x=>x.authId===Store.authUid());
+            line(`✔ tạo tài khoản thành công! UserID: <b>${esc(u?.accId||"—")}</b>`,"ok");
+            await finish(u?u.name:tmp.name,"new");
+          }catch(err){
+            const msg=String(err?.message||err||"");
+            deny("✖ "+(msg.includes("Database error")?"Mã mời sai hoặc tên đã tồn tại":msg));
+            menu();
+          }
+          break;
+        }
         const u=U(tmp.name)||{name:tmp.name,ctf:null,accId:genAccId(),roles:[],skills:[],avail:"",act:{},bio:"",joined:Date.now(),order:users().length};
-        if(!u.accId)u.accId=isRootUser(u)?"#5H4RK":genAccId();
-        markUserSkip(u.name,false);
         u.salt=rid();u.h=await hashPw(tmp.pw,u.salt);putUser(u);tmp.pw=null;
-        line(`✔ đã đặt mật khẩu. UserID của bạn: <b>${esc(u.accId)}</b>`,"ok");await finish(u.name,tmp.isNew?"new":"claim");break}
+        line(`✔ đã đặt mật khẩu. UserID: <b>${esc(u.accId)}</b>`,"ok");await finish(u.name,"new");break}
     }
     }finally{busy=false;if(step!=="done")I.disabled=false,I.focus()}
   }
   async function finish(name,how){
     step="done";I.disabled=true;P.textContent=">";
-    if(name){ME=name;GUEST=false;LS.set("gg_sess",{n:name,h:U(name).h});Store.track(name)}else{ME=null;GUEST=true}
-    line("");line(name?`✔ ACCESS GRANTED · chào mừng trở lại, <b>${esc(name)}</b>`:"✔ truy cập chế độ khách · chỉ xem","ok");SND.grant();
+    if(name){ME=name;GUEST=false;if(Store.mode()!=="supabase")LS.set("gg_sess",{n:name,h:U(name).h});Store.track(name)}else{ME=null;GUEST=true}
+    line("");line(name?`✔ ACCESS GRANTED · chào mừng, <b>${esc(name)}</b>`:"✔ truy cập chế độ khách · chỉ xem công khai","ok");SND.grant();
     if(name){
       await fetchNetInfo(600);
-      act("login",how==="new"?`<b>${esc(name)}</b> gia nhập căn cứ — chào mừng agent mới`:how==="claim"?`<b>${esc(name)}</b> đã kích hoạt tài khoản`:how==="recovery"?`<b>${esc(name)}</b> đăng nhập qua giao thức khôi phục`:`<b>${esc(name)}</b> đã đăng nhập vào căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});
+      act("login",how==="new"?`<b>${esc(name)}</b> gia nhập căn cứ — chào mừng agent mới`:`<b>${esc(name)}</b> đã đăng nhập vào căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});
     }
     await wait(900);
     $("lock").classList.add("out");SND.crt();
@@ -5249,7 +5382,7 @@ let NEED_PW_RESET=false;
 $("cmdBtn").onclick=openCmdPalette;
 $("setBtn").onclick=settingsModal;
 $("meBtn").onclick=()=>{if(member())go("profile",ME)};
-$("outBtn").onclick=()=>{if(member())act("login",`<b>${esc(ME)}</b> rời căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});LS.del("gg_sess");setTimeout(()=>location.reload(),220)};
+$("outBtn").onclick=async()=>{if(member())act("login",`<b>${esc(ME)}</b> rời căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});LS.del("gg_sess");await Store.signOut();setTimeout(()=>location.reload(),220)};
 $("addChal").onclick=()=>chalModal(null);
 const skipBtn=$("skip");
 if(skipBtn){
