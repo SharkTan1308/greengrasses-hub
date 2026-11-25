@@ -1104,6 +1104,25 @@ body.authed.has-bg-vid #bgVid{display:block}
 .card:not(.drag):hover{transform:translateY(-2px)}
 .av,.emb{transition:transform .2s ease,box-shadow .22s ease,border-color .2s ease}
 body.lite-fx .page.on,body.lite-fx .mbox,body.lite-fx #vcOverlay:not([hidden]),body.lite-fx #vcMini:not([hidden]){animation:none}
+
+/* Avatar inline cạnh tên trong ~/notes */
+.n-who{display:inline-flex;align-items:center;gap:5px;vertical-align:bottom}
+.n-av{width:18px;height:18px;border-radius:5px;flex:none;display:inline-block;box-shadow:none}
+.n-sys{width:18px;height:18px;border-radius:5px;flex:none;display:inline-grid;place-items:center;font-size:11px;border:1px solid var(--line);color:var(--g);background:rgba(var(--g-rgb),.1)}
+
+/* Chế độ Ẩn UI: làm mờ toàn bộ khung nội dung, giữ rõ header/nav/footer, hover vào hiện rõ */
+#hideUiBtn[aria-pressed=true]{border-color:var(--g);color:var(--g);background:rgba(var(--g-rgb),.14);box-shadow:0 0 10px rgba(var(--g-rgb),.22)}
+body.authed.ui-dim .page .pn{
+  opacity:.12;
+  transition:opacity .26s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.2,.8,.2,1),border-color .18s,box-shadow .22s,background-color .18s
+}
+body.authed.ui-dim .page .pn:hover,
+body.authed.ui-dim .page .pn:focus-within{
+  opacity:1
+}
+@media (max-width:640px){
+  #hideUiBtn{padding:5px 7px;font-size:11px}
+}
 </style>
 </head>
 <body class="pre">
@@ -1139,6 +1158,7 @@ body.lite-fx .page.on,body.lite-fx .mbox,body.lite-fx #vcOverlay:not([hidden]),b
       <button class="ib" id="cmdBtn" type="button" title="Command Palette (Ctrl+K)">⌘K</button>
       <button class="ib me" id="meBtn" type="button"><i></i><span id="meName">—</span></button>
       <button class="ib" id="setBtn" type="button" title="Cài đặt giao diện & âm thanh">⚙ cài đặt</button>
+      <button class="ib" id="hideUiBtn" type="button" title="Làm mờ các khung UI để ngắm nền (trỏ chuột vào khung sẽ hiện rõ)" aria-pressed="false">👁 ẩn UI</button>
       <button class="ib" id="outBtn" type="button" title="Đăng xuất">⏻</button>
     </div>
   </header>
@@ -2347,10 +2367,14 @@ function renderTerm(){
       const inThis=typeof Voice!=="undefined"&&Voice.roomNoteId()===o.id;
       vhtml=`<div class="vc-card${closed?" closed":""}" data-vc-join="${esc(o.id)}"><div class="vc-info"><b>🎙 ${esc(vc.name)}</b><small>${closed?"Phòng đã đóng":`${curCnt} / ${maxLbl} thành viên`}</small></div><span class="vc-badge">${closed?"CLOSED":inThis?"Đang ở trong":"Tham gia"}</span></div>`;
     }
+    const author=U(o.data.by);
+    const avBadge=o.data.by==="system"
+      ?`<span class="n-sys" aria-hidden="true">⚙</span>`
+      :`<span class="av n-av"${author?avStyle(author):""} aria-hidden="true"></span>`;
     return `<div class="tl">`+
       `<span class="id">[${i+1}]</span>`+
       `<span class="ts">${fmtT.format(o.data.c)}</span>`+
-      `<span class="tx"><span style="color:var(--c)">${esc(o.data.by)}</span>: ${vc?`tạo phòng voice`:renderNoteText(o.data.t)}${fhtml}${vhtml}</span>`+
+      `<span class="tx"><span class="n-who">${avBadge}<span style="color:var(--c)">${esc(o.data.by)}</span></span>: ${vc?`tạo phòng voice`:renderNoteText(o.data.t)}${fhtml}${vhtml}</span>`+
       `<span class="ac"><button data-a="c" data-id="${i+1}" aria-label="Sao chép ${i+1}">copy</button>${canNote(o)?`${vc?"":`<button data-a="e" data-id="${i+1}" aria-label="Sửa ghi chú ${i+1}">sửa</button>`}<button data-a="d" data-id="${i+1}" aria-label="Xóa ghi chú ${i+1}">xóa</button>`:""}</span>`+
     `</div>`;
   }).join(""):'<div class="tl sys">(chưa có thông báo nào)</div>';
@@ -3458,7 +3482,7 @@ const cv=$("rain"),cx=cv.getContext("2d");
 let cols,drops;
 const CH="01ABCDEF<>/#";
 function sizeRain(){cv.width=innerWidth;cv.height=innerHeight;cols=Math.floor(innerWidth/16);drops=Array.from({length:cols},()=>Math.random()*-60)}
-const DEF_THEME={lite:false,sfxVol:60,bgmOn:true,bgmVol:65,eqPreset:"Flat",eqBands:[0,0,0,0,0,0],plShuffle:false,plRepeat:"off",activePlId:null,deskNotify:false,focusMode:false,uiScale:"md",bgMode:"color",bgKind:"image",bgStored:false,color:"#00A8FF",img:"",autoVibe:true,dim:55,panelAlpha:85,liquid:false,titleColor:"#39FF14",curMode:"default",curName:"",curSlots:null,customSet:false};
+const DEF_THEME={lite:false,sfxVol:60,bgmOn:true,bgmVol:65,eqPreset:"Flat",eqBands:[0,0,0,0,0,0],plShuffle:false,plRepeat:"off",activePlId:null,deskNotify:false,focusMode:false,uiHide:false,uiScale:"md",bgMode:"color",bgKind:"image",bgStored:false,color:"#00A8FF",img:"",autoVibe:true,dim:55,panelAlpha:85,liquid:false,titleColor:"#39FF14",curMode:"default",curName:"",curSlots:null,customSet:false};
 const VIBE_PRESETS=[
   {name:"Cyber Blue",color:"#00A8FF",title:"#39FF14",custom:false},
   {name:"Matrix Toxic",color:"#39FF14",title:"#00FFFF",custom:true},
@@ -4022,8 +4046,10 @@ function applyTheme(){
   B.classList.toggle("lite-fx",!!(booted&&THEME.lite));
   SND.setVol(THEME.sfxVol??60);
   BGM.sync();
+  const hb=$("hideUiBtn");
+  if(hb){const h=!!THEME.uiHide;hb.setAttribute("aria-pressed",h);hb.title=h?"Tắt chế độ ẩn UI":"Làm mờ các khung UI để ngắm nền (trỏ chuột vào khung sẽ hiện rõ)"}
   if(!booted||!member()){
-    B.classList.remove("authed","has-bg","has-bg-vid","has-dim","liquid","focus-mode");
+    B.classList.remove("authed","has-bg","has-bg-vid","has-dim","liquid","focus-mode","ui-dim");
     B.style.removeProperty("--ui-k");
     bgEl.style.backgroundImage="";
     if(vidEl&&vidEl.src){vidEl.pause();vidEl.removeAttribute("src");vidEl.load()}
@@ -4032,6 +4058,7 @@ function applyTheme(){
   }
   B.classList.add("authed");
   B.classList.toggle("focus-mode",!!THEME.focusMode);
+  B.classList.toggle("ui-dim",!!THEME.uiHide);
   B.style.setProperty("--ui-k",THEME.uiScale==="sm"?"0.86":THEME.uiScale==="lg"?"1.18":"1");
   const activeSrc=THEME.bgStored?BG_MEDIA_URL:(THEME.img||"");
   const isBgOn=THEME.bgMode==="image"&&!!activeSrc;
@@ -5433,6 +5460,7 @@ qsa("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 let NEED_PW_RESET=false;
 $("cmdBtn").onclick=openCmdPalette;
 $("setBtn").onclick=settingsModal;
+$("hideUiBtn").onclick=()=>{THEME.uiHide=!THEME.uiHide;saveTheme()};
 $("meBtn").onclick=()=>{if(member())go("profile",ME)};
 $("outBtn").onclick=async()=>{if(member())act("login",`<b>${esc(ME)}</b> rời căn cứ`,{ip4:NET_IP.v4,ip6:NET_IP.v6});LS.del("gg_sess");await Store.signOut();setTimeout(()=>location.reload(),220)};
 $("addChal").onclick=()=>chalModal(null);
